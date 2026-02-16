@@ -1,5 +1,7 @@
 #include "bloques.h"
 
+//////////// cambio
+
 static int descriptor = 0;
 
 /*
