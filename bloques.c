@@ -12,7 +12,7 @@ int bmount(const char *camino){
     descriptor = open(camino, O_RDWR | O_CREAT, 0666);
 
     if (descriptor == -1) {
-        perror(RED"Error al abrir el fichero\n"RESET);
+        perror(RED"Error al abrir el fichero\n"); printf(RESET);
     }
     
     return descriptor;
@@ -27,7 +27,7 @@ int bumount() {
     descriptor = close(descriptor);
 
     if (descriptor == -1) {
-        perror(RED"Error al cerrar el fichero\n"RESET);
+        perror(RED"Error al cerrar el fichero\n"); printf(RESET);
     }
 
     return descriptor; 
@@ -45,7 +45,7 @@ int bwrite(unsigned int nbloque, const void *buf) {
     
     // escribimos el bloque
     if (write(descriptor, buf, BLOCKSIZE) == -1) {
-        perror(RED"Error al escribir en el bloque\n"RESET);
+        perror(RED"Error al escribir en el bloque\n"); printf(RESET);
         // si hay error, devolvemos -1
         return -1;      
     }
@@ -65,7 +65,7 @@ int bread(unsigned int nbloque, void *buf) {
     
     // leemos el bloque y lo volcamos en el buffer
     if (read(descriptor, buf, BLOCKSIZE) == -1){
-        perror(RED"Error al leer el bloque\n"RESET);
+        perror(RED"Error al leer el bloque\n"); printf(RESET);
         // si hay error, devolvemos -1
         return -1;   
     }
