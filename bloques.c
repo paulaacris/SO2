@@ -1,5 +1,8 @@
 #include "bloques.h"
 
+#define ERROR -1
+#define EXITO 0
+
 static int descriptor = 0;
 
 /*
@@ -11,7 +14,7 @@ int bmount(const char *camino){
     // creamos/abrimos el fichero con los permisos O_RDWR | O_CREAT
     descriptor = open(camino, O_RDWR | O_CREAT, 0666);
 
-    if (descriptor == -1) {
+    if (descriptor == ERROR) {
         perror(RED"Error al abrir el fichero\n"); printf(RESET);
     }
     
@@ -26,7 +29,7 @@ int bumount() {
     // cerramos el fichero 
     descriptor = close(descriptor);
 
-    if (descriptor == -1) {
+    if (descriptor == ERROR) {
         perror(RED"Error al cerrar el fichero\n"); printf(RESET);
     }
 
@@ -44,10 +47,10 @@ int bwrite(unsigned int nbloque, const void *buf) {
     lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET); // descriptor, dondenos queremos move, donde empezamos (incio dle fichero)
     
     // escribimos el bloque
-    if (write(descriptor, buf, BLOCKSIZE) == -1) {
+    if (write(descriptor, buf, BLOCKSIZE) == ERROR) {
         perror(RED"Error al escribir en el bloque\n"); printf(RESET);
         // si hay error, devolvemos -1
-        return -1;      
+        return ERROR;      
     }
     // si todo ha ido bien, devolvemos el numero de bytes escritos
     return BLOCKSIZE;
@@ -64,10 +67,10 @@ int bread(unsigned int nbloque, void *buf) {
     lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET);
     
     // leemos el bloque y lo volcamos en el buffer
-    if (read(descriptor, buf, BLOCKSIZE) == -1){
+    if (read(descriptor, buf, BLOCKSIZE) == ERROR){
         perror(RED"Error al leer el bloque\n"); printf(RESET);
         // si hay error, devolvemos -1
-        return -1;   
+        return ERROR;   
     }
     // si todo ha ido bien, devolvemos el numero de bytes leidos
     return BLOCKSIZE;
