@@ -45,7 +45,7 @@ int tamAI(unsigned int ninodos){
  */
 int initSB(unsigned int nbloques, unsigned int ninodos){  
     struct superbloque SB;
-    SB.posPrimerBloqueMB = posSB + tamAI;
+    SB.posPrimerBloqueMB = posSB + tamSB;
     SB.posUltimoBloqueMB = SB.posPrimerBloqueMB + tamMB(nbloques) - 1;
     SB.posPrimerBloqueAI = SB.posUltimoBloqueMB + 1;
     SB.posUltimoBloqueAI = SB.posPrimerBloqueAI + tamAI(ninodos) - 1;
@@ -58,8 +58,7 @@ int initSB(unsigned int nbloques, unsigned int ninodos){
     SB.totBloques = nbloques;
     SB.totInodos = ninodos;
 
-    // restamos el bloque que contiene los metadatos del SB de la cantidad de bloques libres en el campo del superbloque
-    SB.cantBloquesLibres--;
+    // no restamos a cantBloquesLibres el bloque de SB porqu elo hace luego initMB
 
     if (bwrite(posSB, &SB) == FALLO) { // escribimos SB en posSB
         perror(RED"Error al escribir el SuperBloque en initSB\n"); printf(RESET);
@@ -145,7 +144,6 @@ int initAI() {
     // buffer de inodos 
     // porque el disco lee por bloques (BLOCKSIZE/INODOSIZE inodos a la vez)
     inodo_t inodos[BLOCKSIZE / INODOSIZE]; 
-    unsigned char bufferAI[BLOCKSIZE];
 
     // leemos el SB
     if (bread(posSB, &SB) == FALLO) {

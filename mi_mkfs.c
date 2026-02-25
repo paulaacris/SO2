@@ -10,13 +10,14 @@
  */
 int main(int argc, char **argv) {
     if (argc != 3) {
-        perror(RED"Error: Número de argumentos incorrecto. \nUso: ./mi_mkfs <nombre_dispositivo> <nbloques>\n"); printf(RESET);
+        perror(RED"Error de sintaxis. \nUso: ./mi_mkfs <nombre_dispositivo> <nbloques>\n"); printf(RESET);
         return -1;
         
     }
  
     char *camino = argv[1]; // porque argv[1] es una dirección de memoria (puntero)
     int nbloques = atoi(argv[2]); // argv[2] lo lee como texto y lo convertimos en int (atoi)
+    int ninodos = nbloques/4; // calculado de forma heuristica
 
     // inicializamos buffer
     unsigned char buffer[BLOCKSIZE];
@@ -36,6 +37,11 @@ int main(int argc, char **argv) {
         perror(RED"Error al escribir en el fichero"); printf(RESET);
         }
     }
+
+    // llamadas a las funciones
+    initSB(nbloques, ninodos);
+    initMB();
+    initAI();
 
     // 3. desmontamos el dispositivo virtual
     if (bumount() == -1) {
