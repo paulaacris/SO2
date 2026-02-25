@@ -1,8 +1,5 @@
 #include "bloques.h"
 
-#define ERROR -1
-#define EXITO 0
-
 static int descriptor = 0;
 
 /*
@@ -14,8 +11,8 @@ int bmount(const char *camino){
     // creamos/abrimos el fichero con los permisos O_RDWR | O_CREAT
     descriptor = open(camino, O_RDWR | O_CREAT, 0666);
 
-    if (descriptor == ERROR) {
-        perror(RED"Error al abrir el fichero\n"); printf(RESET);
+    if (descriptor == FALLO) {
+        perror(RED"Error al abrir el fichero en bmount\n"); printf(RESET);
     }
     
     return descriptor;
@@ -29,8 +26,9 @@ int bumount() {
     // cerramos el fichero 
     descriptor = close(descriptor);
 
-    if (descriptor == ERROR) {
-        perror(RED"Error al cerrar el fichero\n"); printf(RESET);
+    if (descriptor == FALLO) {
+        perror(RED"Error al cerrar el fichero en bumount\n"); printf(RESET);
+        return FALLO; 
     }
 
     return descriptor; 
@@ -40,19 +38,18 @@ int bumount() {
  *  escribe un bloque en el dispositivo virtual (bloque físico especificado por nbloque)
  *  @param nbloque donde lo quieres escribir
  *  @param buf lo que quieres escribir
- *  @return numero de bytes que ha podido escribir (BLOCKSIZE  -1 si ha habido error)
+ *  @return numero de bytes que ha podido escribir (BLOCKSIZE) o -1 si ha habido error
  */
 int bwrite(unsigned int nbloque, const void *buf) {
     // movemos el puntero al offset correcto 
     lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET); // descriptor, dondenos queremos move, donde empezamos (incio dle fichero)
     
     // escribimos el bloque
-    if (write(descriptor, buf, BLOCKSIZE) == ERROR) {
-        perror(RED"Error al escribir en el bloque\n"); printf(RESET);
-        // si hay error, devolvemos -1
-        return ERROR;      
+    if (write(descriptor, buf, BLOCKSIZE) == FALLO) {
+        perror(RED"Error al escribir en el bloque en bwrite\n"); printf(RESET);
+        return FALLO;      
     }
-    // si todo ha ido bien, devolvemos el numero de bytes escritos
+
     return BLOCKSIZE;
 }
 
@@ -60,18 +57,17 @@ int bwrite(unsigned int nbloque, const void *buf) {
  *  lee el bloque físico especificado en nbloque
  *  @param nbloque bloque físico que queremos leer
  *  @param buf lo que quieres escribir
- *  @return numero de bytes que ha podido escribir (BLOCKSIZE  -1 si ha habido error)
+ *  @return numero de bytes que ha podido escribir (BLOCKSIZE) o -1 si ha habido error
  */
 int bread(unsigned int nbloque, void *buf) {
     // movemos el puntero al offset correcto
     lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET);
     
     // leemos el bloque y lo volcamos en el buffer
-    if (read(descriptor, buf, BLOCKSIZE) == ERROR){
-        perror(RED"Error al leer el bloque\n"); printf(RESET);
-        // si hay error, devolvemos -1
-        return ERROR;   
+    if (read(descriptor, buf, BLOCKSIZE) == FALLO){
+        perror(RED"Error al leer el bloque en bread\n"); printf(RESET);
+        return FALLO;   
     }
-    // si todo ha ido bien, devolvemos el numero de bytes leidos
+
     return BLOCKSIZE;
 }

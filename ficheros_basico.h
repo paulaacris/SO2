@@ -1,7 +1,8 @@
-#include bloques.h
+#include "bloques.h"
 
 #include <time.h>   //para los sellos de tiempo
 #include <stdio.h>
+#include <limits.h> // para usar UINT_MAX
 
 #define posSB 0 // el superbloque se escribe en el primer bloque de nuestro FS
 #define tamSB 1
@@ -42,7 +43,7 @@ typedef union _inodo {
     char padding[INODOSIZE];
 } inodo_t;
 
-int tambMB (unsigned int nbloques);
+int tamMB (unsigned int nbloques);
 int tamAI(unsigned int ninodos);
 int initSB(unsigned int nbloques, unsigned int ninodos);
 int initMB(); 
