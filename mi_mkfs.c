@@ -11,8 +11,7 @@
 int main(int argc, char **argv) {
     if (argc != 3) {
         perror(RED"Error de sintaxis. \nUso: ./mi_mkfs <nombre_dispositivo> <nbloques>\n"); printf(RESET);
-        return -1;
-        
+        return FALLO;
     }
  
     char *camino = argv[1]; // porque argv[1] es una dirección de memoria (puntero)
@@ -26,14 +25,14 @@ int main(int argc, char **argv) {
 
 
     // 1. montar el dispositivo virtual 
-    if (bmount(camino) == -1 ) {
+    if (bmount(camino) == FALLO) {
         perror(RED"Error al abrir/crear el fichero"); printf(RESET);
-        return -1; // si no se puede abrir/crear el disco no importa seguir
+        return FALLO; // si no se puede abrir/crear el disco no importa seguir
     }
 
     // 2. inicializamos el fichero a 0s con bwrite
     for (int i = 0; i < nbloques; i++) {
-        if (bwrite(i, buffer) == -1 ) {
+        if (bwrite(i, buffer) == FALLO) {
         perror(RED"Error al escribir en el fichero"); printf(RESET);
         }
     }
@@ -44,7 +43,7 @@ int main(int argc, char **argv) {
     initAI();
 
     // 3. desmontamos el dispositivo virtual
-    if (bumount() == -1) {
+    if (bumount() == FALLO) {
         perror(RED"Error al cerrar el fichero"); printf(RESET);
     }
 }
