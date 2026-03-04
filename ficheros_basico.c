@@ -1,5 +1,7 @@
 #include "ficheros_basico.h"
 
+#define DEBUG_leer_bit 1
+
 /*
  *  calcla el tamaño en bloques del mapa de bits (cada bit representa un bloque) 
  *  @param nbloques numero de bloques del disco
@@ -257,9 +259,13 @@ char leer_bit(unsigned int nbloque) {
     int nbloqueabs = SB.posPrimerBloqueMB + nbloqueMB;
     int posbyte = posbyteMB % BLOCKSIZE;
 
+    # if DEBUG_leer_bit
+        printf(GRAY"[leer_bit(%d) -> posbyteMB:%d, posbyte:%d, posbit:%d, nbloqueMB:%d, nbloqueabs:%d]\n"RESET, nbloque, posbyteMB, posbyte, posbit, nbloqueMB, nbloqueabs);
+    # endif
+
     // leemos nbloqueabs
     if (bread(nbloqueabs, bufferMB) == FALLO) {
-        perror(RED"Error al leer el bloque en escribir_bit\n"); printf(RESET);
+        perror(RED"Error al leer el bloque en leer_bit\n"); printf(RESET);
         return FALLO;
     }
 
@@ -278,7 +284,7 @@ char leer_bit(unsigned int nbloque) {
 
 /*
  *  Encuentra el primer bloque libre (consultando MB) y lo ocupa (poniendo el bit a 1)
- *  @return posición del primer bloque libre
+ *  @return posición del bloque reservado
  */
 int reservar_bloque() {
     struct superbloque SB;
@@ -287,7 +293,7 @@ int reservar_bloque() {
 
     // leer el SB
     if (bread(posSB, &SB) == FALLO) {
-        perror(RED"Error al leer el SuperBloque en leer_bit\n"); printf(RESET);
+        perror(RED"Error al leer el SuperBloque en reservar_bloque\n"); printf(RESET);
         return FALLO;
     }
 
@@ -359,25 +365,182 @@ int reservar_bloque() {
     unsigned char buffer[BLOCKSIZE];
     memset(buffer, 0, BLOCKSIZE); // lo llenamos todo de 0
     if (bwrite(nbloque, buffer) == FALLO) {
-        perror(RED"Error al escribir en el fichero"); printf(RESET);
+        perror(RED"Error al escribir en el fichero en reservar_bloque"); printf(RESET);
         return FALLO;
     }
  
     return nbloque;
 }
 
+/*
+ *  Ponemos a 0 el bit de MB que representa nbloque mediante escribir_bit
+ *  @param nbloque numero de bloque a liberar
+ *  @return numero de bloque liberado (nbloque)
+ */
 int liberar_bloque(unsigned int nbloque) { 
+    struct superbloque SB;
 
+    // leer el SB
+    if (bread(posSB, &SB) == FALLO) {
+        perror(RED"Error al leer el SuperBloque en liberar_bloque\n"); printf(RESET);
+        return FALLO;
+    }
+
+    // 1. mediante escribir_bit ponemos a 0 el bit de MB que representa nbloque 
+    if (escribir_bit(nbloque, 0) == FALLO) {
+        perror(RED"Error al escribir bit en liberar_bloque\n"); printf(RESET);
+        return FALLO;
+    }
+
+    // 2. incrementamos cantidad bloques libres de SB 
+    SB.cantBloquesLibres ++;
+    if (bwrite(posSB, &SB) == FALLO) { // escribimos SB en posSB
+        perror(RED"Error al escribir el SuperBloque en liberar_bloque\n"); printf(RESET);
+        return FALLO;
+    } 
+
+    return nbloque;
 }
 
+/*
+ *  Escribe el contenido de inodo en el inodo ninodo
+ *  @param ninodo numero de inodo que queremos escribir
+ *  @param inodo lo que queremos escribir 
+ *  @return 0 si todo ha ido bien, -1 en caso contrario 
+ */
 int escribir_inodo(unsigned int ninodo, inodo_t *inodo) {
+    struct superbloque SB;
+    inodo_t inodos[BLOCKSIZE/INODOSIZE];
 
+    // leer el SB
+    if (bread(posSB, &SB) == FALLO) {
+        perror(RED"Error al leer el SuperBloque en escribir_inodo\n"); printf(RESET);
+        return FALLO;
+    }
+
+    // numeor de bloque relativo al  AI que contiene el ninodo
+    int nbloqueAI = ninodo / (BLOCKSIZE/INODOSIZE); // dividir por el numero de inodos que caben en un bloque 
+    // posicion abroluta del bloque 
+    int nbloqueabs = SB.posPrimerBloqueAI + nbloqueAI;
+
+    // leemos la posicion nbloqueabs del disco y lo guardamos en inodos 
+    // lo leemos porque para escribir inodos se escriben BLOCKSIZE/INODOSIZE a la vez (los que camben en un bloque)
+    // y el contenido del resto hay que preservarlo
+    if (bread(nbloqueabs, inodos) == FALLO) {
+        perror(RED"Error al leer bloque de inodos en escribir_inodo\n"); printf(RESET);
+        return FALLO;
+    }
+
+    // numero de inodo [0, 7] que se escribirá
+    int posinodo = ninodo % (BLOCKSIZE / INODOSIZE);
+
+    // escribimos el inodo 
+    inodos[posinodo] = *inodo;
+
+    // escribimos el bloque de inodos en el disco 
+    if (bwrite(nbloqueabs, inodos) == FALLO) {
+        perror(RED"Error al escribir el bloque de inodos en escribir_inodo\n"); printf(RESET);
+        return FALLO;
+    } 
+
+    return EXITO;
 }
 
+/*
+ *  Lee un determinado inodo del AI 
+ *  @param ninodo numero de inodo que queremos leer
+ *  @param inodo donde vamos a volcar el contenido
+ *  @return 0 si todo ha ido bien, -1 en caso contrario 
+ */
 int leer_inodo(unsigned int ninodo, inodo_t *inodo) {
+    struct superbloque SB;
+    inodo_t inodos[BLOCKSIZE/INODOSIZE];
 
+    // leer el SB
+    if (bread(posSB, &SB) == FALLO) {
+        perror(RED"Error al leer el SuperBloque en leer_inodo\n"); printf(RESET);
+        return FALLO;
+    }
+
+    // numeor de bloque relativo al  AI que contiene el ninodo
+    int nbloqueAI = ninodo / (BLOCKSIZE/INODOSIZE);
+    // posicion abroluta del bloque 
+    int nbloqueabs = SB.posPrimerBloqueAI + nbloqueAI;
+
+    // leemos la posicion nbloqueabs del disco y lo guardamos en inodos 
+    if (bread(nbloqueabs, inodos) == FALLO) {
+        perror(RED"Error al leer bloque de inodos en leer_inodo\n"); printf(RESET);
+        return FALLO;
+    }
+
+    // numero de inodo [0, 7] que se leerá
+    int posinodo = ninodo % (BLOCKSIZE / INODOSIZE);
+
+    // volcamso el inodo 
+    *inodo = inodos[posinodo];
+
+    return EXITO;
 }
 
+/*
+ *  Encuentra el primer inodo libre (dato del SB), lo reserva (con escribir_inodo) y actualiza la lista enlazada
+ *  @param tipo 
+ *  @param permisos
+ *  @return numeor de inodo reservado
+ */
 int reservar_inodo(unsigned char tipo, unsigned char permisos) {
+    struct superbloque SB;
+    inodo_t inodo; // donde guardaremos el contenido del primer inodo libre
 
+    // leer el SB
+    if (bread(posSB, &SB) == FALLO) {
+        perror(RED"Error al leer el SuperBloque en leer_inodo\n"); printf(RESET);
+        return FALLO;
+    }
+
+    if (SB.cantInodosLibres == 0) {
+        perror(RED"No hay inodos libres para reservar\n"); printf(RESET);
+        return FALLO;
+    }
+
+    // actualizamos lista enlazada 
+    // guardamso el primer inodo libre en una variable auxiliar
+    int posInodoReservado = SB.posPrimerInodoLibre;
+
+    // leemos el inodo que vamos a reservar
+    if (leer_inodo(posInodoReservado, &inodo) == FALLO) {
+        perror(RED"Error al leer el inodo en reservar_inodo\n"); printf(RESET);
+        return FALLO;
+    }
+    
+    // el nuevo primer inodo libre es al que apuntaba antes posPrimerInodoLibre
+    SB.posPrimerInodoLibre = inodo.punterosDirectos[0];    
+
+    // inicializamos el inodo reservado 
+    inodo.tipo = tipo;
+    inodo.permisos = permisos;
+    inodo.nlinks = 1;
+    inodo.tamEnBytesLog = 0;
+    inodo.atime = time(NULL);
+    inodo.mtime = time(NULL);
+    inodo.ctime = time(NULL);
+    inodo.numBloquesOcupados = 0;
+    // tamaños en bytes de punterosDirectos / tamaño en bytes de un elemento = numero de elementos 
+    for (int i = 0; i < (sizeof(inodo.punterosDirectos) / sizeof(inodo.punterosDirectos[0])); i++) inodo.punterosDirectos[i] = 0; // 0 porque no apuntan a nada
+    for (int i = 0; i < (sizeof(inodo.punterosIndirectos) / sizeof(inodo.punterosIndirectos[0])); i++) inodo.punterosIndirectos[i] = 0; // 0 porque no apuntan a nada
+    
+    // escribimos el inodo inicializado en la posicion dle que era el primer inodo libre (posInodoReservado)
+    if (escribir_inodo(posInodoReservado, &inodo) == FALLO) {
+        perror(RED"Error al escribir el inodo en reservar_inodo\n"); printf(RESET);
+        return FALLO;
+    }
+
+    // actualizamos el SB
+    SB.cantInodosLibres --;
+    if (bwrite(posSB, &SB) == FALLO) { // escribimos SB en posSB
+        perror(RED"Error al escribir el SuperBloque en reservar_inodo\n"); printf(RESET);
+        return FALLO;
+    }
+    
+    return posInodoReservado;
 }
