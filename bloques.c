@@ -56,7 +56,7 @@ int bwrite(unsigned int nbloque, const void *buf) {
 /*
  *  lee el bloque físico especificado en nbloque
  *  @param nbloque bloque físico que queremos leer
- *  @param buf lo que quieres escribir
+ *  @param buf donde se vuelva el contenido 
  *  @return numero de bytes que ha podido escribir (BLOCKSIZE) o -1 si ha habido error
  */
 int bread(unsigned int nbloque, void *buf) {
