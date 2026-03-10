@@ -1,7 +1,8 @@
 #include "ficheros_basico.h"
 
 #define NIVEL2 0
-#define NIVEL3 1
+#define NIVEL3 0
+#define NIVEL4 1
 
 int main(int argc, char **argv) {
 
@@ -109,6 +110,54 @@ int main(int argc, char **argv) {
         printf("nlinks: %d\n", inodo.nlinks);
         printf("tamEnBytesLog: %d\n", inodo.tamEnBytesLog);
         printf("numBloquesOcupados:%d\n", inodo.numBloquesOcupados);
+    # endif
+
+    # if NIVEL4
+        int ninodo=reservar_inodo('f',6);
+        printf(ROSE"\nINODO 1. TRADUCCION DE LOS BLOQUES LOGICOS 8, 204, 30.004, 400.004 y 468.750\n"RESET);
+        traducir_bloque_inodo(ninodo, 8, 1);
+        printf("\n");
+        traducir_bloque_inodo(ninodo, 204, 1);
+        printf("\n");
+        traducir_bloque_inodo(ninodo, 30004, 1);
+        printf("\n");
+        traducir_bloque_inodo(ninodo, 400004, 1);
+        printf("\n");
+        traducir_bloque_inodo(ninodo, 468750, 1);
+        printf("\n");
+
+        inodo_t inodo;
+        if(leer_inodo(ninodo,&inodo)==FALLO) return FALLO;
+        
+        struct tm *ts;
+        char atime[80];
+        char mtime[80];
+        char ctime[80];
+        char btime[80];
+    
+        ts = localtime(&inodo.atime);
+        strftime(atime, sizeof(atime), "%a %Y-%m-%d %H:%M:%S", ts);
+        ts = localtime(&inodo.mtime);
+        strftime(mtime, sizeof(mtime), "%a %Y-%m-%d %H:%M:%S", ts);
+        ts = localtime(&inodo.ctime);
+        strftime(ctime, sizeof(ctime), "%a %Y-%m-%d %H:%M:%S", ts);
+        ts = localtime(&inodo.btime);
+        strftime(btime,sizeof(btime), "%a %Y-%m-%d %H:%M:%S", ts);
+       
+        printf(ROSE"DATOS DEL DIRECTORIO RAIZ\n"RESET);
+        printf("tipo: %c\n", inodo.tipo);
+        printf("permisos: %d\n", inodo.permisos);
+        printf("atime: %s\n", atime);
+        printf("mtime:%s\n", mtime);
+        printf("ctime: %s\n", ctime);
+        printf("btime: %s\n", btime);
+        printf("nlinks: %d\n", inodo.nlinks);
+        printf("tamEnBytesLog: %d\n", inodo.tamEnBytesLog);
+        printf("numBloquesOcupados:%d\n", inodo.numBloquesOcupados);
+
+        if(bread(posSB,&SB)==FALLO) return FALLO;
+        
+        printf("\nSB.posPrimerInodoLibre = %d\n",SB.posPrimerInodoLibre);
     # endif
 
     if(bumount() == FALLO) return FALLO;

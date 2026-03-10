@@ -62,7 +62,6 @@ int main(int argc, char **argv) {
         perror(RED"Error al reservar el inodo raiz"); printf(RESET);
         return FALLO;
     }
-    printf("Se ha reservado el inodo %d para el directorio raíz\n", inodoRaiz);
 
     // 3. desmontamos el dispositivo virtual
     if (bumount() == FALLO) {
