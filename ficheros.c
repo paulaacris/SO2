@@ -19,13 +19,11 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         return FALLO;
     }
 
-    /* ESTO NO SE SI HAY QUE HACERLO 
     // comprobamos que el offset no es mayor que el tamaño lógico del inodo
     if (offset > inodo.tamEnBytesLog) {
         fprintf(stderr, RED "Error: offset mayor que el tamaño lógico del inodo en mi_write_f\n" RESET);
         return FALLO;
     }
-    */
     
     // comprobamos que tenga los permisos necesarios
     if ((inodo.permisos & 2) != PERMISO_ESCRITURA) { // el segundo bit tiene que estar a 1 (010, 011, 110, 111)
@@ -168,7 +166,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     int desp2 = (offset + nbytes - 1) % BLOCKSIZE;
 
     // CASO 1: ESCRIBIMOS EN UN SOLO BLOQUE 
-    if (primerBL == ultimoBL) {    
+    if (primerBL == ultimoBL) {
         int nbfisico = traducir_bloque_inodo(ninodo, primerBL, 0);
         
         if (nbfisico != FALLO) {
@@ -198,9 +196,8 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         bytes_leidos += BLOCKSIZE - desp1;
         
         // BLOQUES INTERMEDIOS 
-        for (int bl = primerBL + 1; bl < ultimoBL; bl ++) {
-            // traducimos el blque 
-            nbfisico = traducir_bloque_inodo(ninodo, bl, 1);
+        for (int bl = primerBL + 1; bl < ultimoBL; bl++) {
+            nbfisico = traducir_bloque_inodo(ninodo, bl, 0); 
             if (nbfisico != FALLO) {
                 if (bread(nbfisico, buf_bloque) == FALLO) {
                     perror(RED "Error al leer el bloque en mi_read_f\n"); printf(RESET);
@@ -208,9 +205,8 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
                 } 
                 memcpy(buf_original + bytes_leidos, buf_bloque, BLOCKSIZE);
             } 
-
             bytes_leidos += BLOCKSIZE;
-        }
+        } // <--- ASEGÚRATE DE QUE ESTA LLAVE EXISTE
 
         // ULTIMO BLOQUE
         nbfisico = traducir_bloque_inodo(ninodo, ultimoBL, 0);
@@ -238,4 +234,6 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
 
 //int mi_stat_f(unsigned int ninodo, struct STAT *p_stat);
-int mi_chmod_f(unsigned int ninodo, unsigned char permisos);
+int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
+
+}
