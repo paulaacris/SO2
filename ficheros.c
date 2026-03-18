@@ -233,7 +233,61 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 }
 
 
-//int mi_stat_f(unsigned int ninodo, struct STAT *p_stat);
-int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
+/*
+ *  
+ *  @param ninodo inodo al que corresponde el fichero/directorio
+ *  @param ninodo inodo al que corresponde el fichero/directorio
+ *  @param p_stat puntero al stat donde guardaremos la metainformacion
+ *  @return metainformacion de un fichero
+ */
+int mi_stat_f(unsigned int ninodo, struct STAT *p_stat) {
+    inodo_t inodo;
 
+    // leer el inodo
+    if (leer_inodo(ninodo, &inodo) == FALLO) {
+        perror(RED "Error al leer el inodo en mi_stat_f\n"); printf(RESET);
+        return FALLO;
+    }
+
+    // devolver la metainformacion
+    p_stat->tipo = inodo.tipo;
+    p_stat->permisos = inodo.permisos;
+
+    p_stat->atime = inodo.atime;
+    p_stat->mtime = inodo.mtime;
+    p_stat->ctime = inodo.ctime;
+    p_stat->btime = inodo.btime;
+
+    p_stat->nlinks = inodo.nlinks;
+    p_stat->tamEnBytesLog = inodo.tamEnBytesLog;
+    p_stat->numBloquesOcupados = inodo.numBloquesOcupados;
+
+    return EXITO;
+}
+
+/*
+ *  Cambia los permisos de un fichero/directorio 
+ *  @param ninodo inodo al que corresponde el fichero/directorio
+ *  @param permisos permiso por el que queremos sustituir el anterior
+ *  @return cantidad de bytes leidos realmente
+ */
+int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
+    inodo_t inodo;
+
+    // leer el inodo
+    if (leer_inodo(ninodo, &inodo) == FALLO) {
+        perror(RED "Error al leer el inodo en mi_chmod_f\n"); printf(RESET);
+        return FALLO;
+    }
+
+    inodo.permisos = permisos; // cambiamos el permiso
+    inodo.ctime = time(NULL); // actualizamos la fecha de la ultima modificacion
+
+    // guardamos los cmabios 
+    if (escribir_inodo(ninodo, &inodo) == FALLO) {
+        perror(RED "Error al escribir el inodo en mi_chmod_f\n"); printf(RESET);
+        return FALLO;
+    } 
+
+    return EXITO;
 }
