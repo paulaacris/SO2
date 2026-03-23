@@ -8,6 +8,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, RED "Sintaxis: leer <nombre_dispositivo> <ninodo>\n" RESET);
         return FALLO;
     }
+    
     // Guardamos el primer argumento (nombre del dispositivo)
     char *nombre_dispositivo = argv[1];
     // Guardamos el segundo argumento (ninodo)
@@ -46,9 +47,11 @@ int main(int argc, char *argv[]) {
 
     // Mostramos stat para ver que el tamaño coincide
     struct STAT stat;
-    if (mi_stat_f(ninodo, &stat) != FALLO) {
-        fprintf(stderr, "tamEnBytesLog: %u\n", stat.tamEnBytesLog);
+    if (mi_stat_f(ninodo, &stat) == FALLO) {
+        return FALLO;
     }
+
+    fprintf(stderr, "tamEnBytesLog: %u\n", stat.tamEnBytesLog);
 
     bumount();
     return EXITO;

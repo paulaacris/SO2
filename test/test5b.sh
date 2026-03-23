@@ -8,10 +8,10 @@ echo -e "\x1B[38;2;17;245;120m$ ./mi_mkfs disco 100000\x1b[0m"
 ./mi_mkfs disco 100000
 echo
 echo -e "\x1B[38;2;17;245;120m################################################################################\x1b[0m"
-echo -e "\x1B[38;2;17;245;120m$ ./escribir disco "$(cat texto2.txt)" 1\x1b[0m"
+echo -e "\x1B[38;2;17;245;120m$ ./escribir disco "$(cat test/texto2.txt)" 1\x1b[0m"
 echo -e "\x1B[38;2;17;245;120m#escribimos el texto contenido en text2.txt en los offsets  9000, 209000, 30725000, \x1b[0m"
 echo -e "\x1B[38;2;17;245;120m#409605000 y 480000000 de inodos diferentes\x1b[0m"
-./escribir disco "$(cat texto2.txt)" 1
+./escribir disco "$(cat test/texto2.txt)" 1
 echo
 echo -e "\x1B[38;2;17;245;120m################################################################################\x1b[0m"
 echo -e "\x1B[38;2;17;245;120m$ ./leer disco 2 > ext4.txt\x1b[0m"

@@ -11,17 +11,11 @@
 int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offset, unsigned int nbytes) {
     inodo_t inodo;
     unsigned char buf_bloque[BLOCKSIZE];
-    int bytes_escritos = 0;
+    int nbfisico, bytes_escritos = 0;
 
     // leer el inodo
     if (leer_inodo(ninodo, &inodo) == FALLO) {
         perror(RED "Error al leer el inodo en mi_write_f\n"); printf(RESET);
-        return FALLO;
-    }
-
-    // comprobamos que el offset no es mayor que el tamaño lógico del inodo
-    if (offset > inodo.tamEnBytesLog) {
-        fprintf(stderr, RED "Error: offset mayor que el tamaño lógico del inodo en mi_write_f\n" RESET);
         return FALLO;
     }
     
@@ -33,48 +27,55 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
     int primerBL = offset/BLOCKSIZE; // bloque logico en el que empezaremos a escribir
     int ultimoBL = (offset + nbytes - 1) / BLOCKSIZE; // ultimo bloque logico a escribir 
-
     int desp1 = offset % BLOCKSIZE; // byte relativo a primerBL donde se empieza a escribir (incluido)
     int desp2 = (offset + nbytes -1) % BLOCKSIZE; // byte relativo a primerBL donde se termina de escribir (incluido)
-    
-    // obtenemos el bloque fisico correspondiente al bloque logico primerBL
-    int nbfisico = traducir_bloque_inodo(ninodo, primerBL, 1);
-    if (nbfisico == FALLO) {
-        perror(RED "Error al traducir el bloque en mi_write_f\n"); printf(RESET);
-        return FALLO;
-    } 
 
     // CASO 1: ESCRIBIMOS EN UN SOLO BLOQUE 
-    if (primerBL == ultimoBL) {    
+    if (primerBL == ultimoBL) {   
+        // obtenemos el bloque fisico correspondiente al bloque logico primerBL
+        nbfisico = traducir_bloque_inodo(ninodo, primerBL, 1);
+        if (nbfisico == FALLO) {
+            perror(RED "Error al traducir el bloque en mi_write_f\n"); printf(RESET);
+            return FALLO;
+        }  
         // leemos ese bloque fisico 
         // porque hay que preservar la parte que no vamos a escribir
         if (bread(nbfisico, buf_bloque) == FALLO) {
             perror(RED "Error al leer el bloque en mi_write_f\n"); printf(RESET);
-            return FALLO;
+            return bytes_escritos;
         }
 
-        memcpy(buf_bloque+desp1, buf_original, nbytes); // (donde, desde donde, tamaño)
+        memcpy(buf_bloque + desp1, buf_original, nbytes); // (donde, desde donde, tamaño)
 
         // escribimos buf_bloque modificado en el bloque fisico 
         if (bwrite(nbfisico, buf_bloque) == FALLO) {
             perror(RED "Error al escribir el bloque en mi_write_f\n"); printf(RESET);
-            return FALLO;
+            return bytes_escritos;
         }
+
+        bytes_escritos = nbytes;
     }
 
     // CASO 2: ESCRIBIMOS EN MAS DE UN BLOQUE
-    if (primerBL != ultimoBL) {
+    else {
+        // obtenemos el bloque fisico correspondiente al bloque logico primerBL
+        nbfisico = traducir_bloque_inodo(ninodo, primerBL, 1);
+        if (nbfisico == FALLO) {
+            perror(RED "Error al traducir el bloque en mi_write_f\n"); printf(RESET);
+            return FALLO;
+        }  
+
         // PRIMER BLOQUE 
         if (bread(nbfisico, buf_bloque) == FALLO) {
             perror(RED "Error al leer el bloque en mi_write_f\n"); printf(RESET);
-            return FALLO;
+            return bytes_escritos;
         }
 
         memcpy(buf_bloque + desp1, buf_original, BLOCKSIZE - desp1);
 
         if (bwrite(nbfisico, buf_bloque) == FALLO) {
             perror(RED "Error al escribir el bloque en mi_write_f\n"); printf(RESET);
-            return FALLO;
+            return bytes_escritos;
         }
 
         bytes_escritos += (BLOCKSIZE - desp1);
@@ -89,7 +90,11 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
             } 
 
             // sobreescibimos todo el bloque 
-            bwrite(nbfisico, buf_original + bytes_escritos);
+            if (bwrite(nbfisico, buf_original + bytes_escritos) == FALLO) {
+                perror(RED "Error al escribir el bloque en mi_write_f\n"); printf(RESET);
+                return bytes_escritos;
+            }
+
             bytes_escritos += BLOCKSIZE;
         }
 
@@ -98,19 +103,21 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
         if (bread(nbfisico, buf_bloque) == FALLO) {
             perror(RED "Error al leer el bloque en mi_write_f\n"); printf(RESET);
-            return FALLO;
+            return bytes_escritos;
         }  
         
-        memcpy(buf_bloque, buf_original + bytes_escritos, BLOCKSIZE - desp2);
+        memcpy(buf_bloque, buf_original + bytes_escritos, desp2 + 1);
 
         if (bwrite(nbfisico, buf_bloque) == FALLO) {
             perror(RED "Error al escribir el bloque en mi_write_f\n"); printf(RESET);
-            return FALLO;
+            return bytes_escritos;
         }
 
         bytes_escritos += (desp2 + 1);
     } 
 
+    // leemos porque en traducir se modifica el inodo, si no no lo tenemos actualizado 
+    leer_inodo(ninodo, &inodo);
     // actualizamos el inodo 
     if (offset + nbytes > inodo.tamEnBytesLog) { // solo actualizamos si hemos escrito mas alla del final del fichero 
         inodo.tamEnBytesLog = offset + nbytes;
@@ -137,7 +144,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsigned int nbytes) {
     inodo_t inodo;
     unsigned char buf_bloque[BLOCKSIZE];
-    int bytes_leidos = 0;
+    int nbfisico = 0, bytes_leidos = 0;
 
     // leer el inodo
     if (leer_inodo(ninodo, &inodo) == FALLO) {
@@ -147,12 +154,11 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     
     // comprobamos que tenga los permisos necesarios
     if ((inodo.permisos & 4) != PERMISO_LECTURA) { // el tercer bit tiene que estar a 1 (100, 101, 110, 111)
-        perror(RED "No hay permisos de lectura en mi_write_f\n"); printf(RESET);
+        fprintf(stderr, RED "No hay permisos de lectura en mi_read_f\n" RESET);
         return FALLO;
     }
 
     if (offset >= inodo.tamEnBytesLog) {
-        perror(RED "No se puede empezar a leer mas alla del tamaño en bytes logicos del inodo en mi_read_f\n"); printf(RESET);
         return bytes_leidos;
     }
 
@@ -167,12 +173,12 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
     // CASO 1: ESCRIBIMOS EN UN SOLO BLOQUE 
     if (primerBL == ultimoBL) {
-        int nbfisico = traducir_bloque_inodo(ninodo, primerBL, 0);
+        nbfisico = traducir_bloque_inodo(ninodo, primerBL, 0);
         
         if (nbfisico != FALLO) {
             if (bread(nbfisico, buf_bloque) == FALLO) {
                 perror(RED "Error al leer el bloque en mi_read_f\n"); printf(RESET);
-                return FALLO;
+                return bytes_leidos;
             } 
             memcpy(buf_original, buf_bloque + desp1, nbytes);
         }
@@ -183,12 +189,12 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     // CASO 2: ESCRIBIMOS EN MAS DE UN BLOQUE
     if (primerBL != ultimoBL) {
         // PRIMER BLOQUE 
-        int nbfisico = traducir_bloque_inodo(ninodo, primerBL, 0);
+        nbfisico = traducir_bloque_inodo(ninodo, primerBL, 0);
 
         if (nbfisico != FALLO) {
             if (bread(nbfisico, buf_bloque) == FALLO) {
                 perror(RED "Error al leer el bloque en mi_read_f\n"); printf(RESET);
-                return FALLO;
+                return bytes_leidos;
             } 
             memcpy(buf_original, buf_bloque + desp1, BLOCKSIZE - desp1);
         }
@@ -201,12 +207,12 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
             if (nbfisico != FALLO) {
                 if (bread(nbfisico, buf_bloque) == FALLO) {
                     perror(RED "Error al leer el bloque en mi_read_f\n"); printf(RESET);
-                    return FALLO;
+                    return bytes_leidos;
                 } 
                 memcpy(buf_original + bytes_leidos, buf_bloque, BLOCKSIZE);
             } 
             bytes_leidos += BLOCKSIZE;
-        } // <--- ASEGÚRATE DE QUE ESTA LLAVE EXISTE
+        } 
 
         // ULTIMO BLOQUE
         nbfisico = traducir_bloque_inodo(ninodo, ultimoBL, 0);

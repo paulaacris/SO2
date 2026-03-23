@@ -1,7 +1,7 @@
 #include "ficheros_basico.h"
 
 #define DEBUG_leer_bit 0
-#define DEBUG_traducir_bloque_inodo 0
+#define DEBUG_traducir_bloque_inodo 1
 
 /*
  *  calcla el tamaño en bloques del mapa de bits (cada bit representa un bloque)
@@ -162,8 +162,7 @@ int initAI() {
     for (int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
         // leemos el bloque
         if (bread(i, inodos) == FALLO) {
-            perror(RED "Error al leer bloque de inodos en initAI\n");
-            printf(RESET);
+            perror(RED "Error al leer bloque de inodos en initAI\n"); printf(RESET);
             return FALLO;
         }
 
@@ -664,6 +663,7 @@ int traducir_bloque_inodo(unsigned int inodo, unsigned int nblogico, unsigned ch
             }
 
             ptr = reservar_bloque(); // se reserva el bloque de datos
+
             if (ptr == FALLO) {
                 perror(RED "Error al reservar bloque en traducir_bloque_inodo\n"); printf(RESET);
                 return FALLO;
@@ -693,6 +693,7 @@ int traducir_bloque_inodo(unsigned int inodo, unsigned int nblogico, unsigned ch
                 }
 
                 ptr = reservar_bloque(); // se reserva el bloque de datos
+
                 if (ptr == FALLO) {
                     perror(RED "Error al reservar bloque en traducir_bloque_inodo\n"); printf(RESET);
                     return FALLO;
@@ -744,8 +745,7 @@ int traducir_bloque_inodo(unsigned int inodo, unsigned int nblogico, unsigned ch
                 return FALLO;
             }
 
-            ptr = reservar_bloque();  
-
+            ptr = reservar_bloque();
             inodoAux.numBloquesOcupados ++;
             inodoAux.ctime = time(NULL);
             salvar_inodo = 1;  
