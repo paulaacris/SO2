@@ -297,3 +297,45 @@ int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
 
     return EXITO;
 }
+
+/*
+ *  Trunca un fichero/directorio a los bytes indicados, liberando los bloques necesarios
+ *  @param ninodo número del inodo a truncar
+ *  @param nbytes nuevo tamaño en bytes al que queremos dejar el fichero
+ *  @return 
+ */
+int mi_truncar_f(unsigned int ninodo, unsigned int nbytes) {
+    inodo_t inodo;
+    int primerBL;
+
+    // leer el inodo
+    if (leer_inodo(ninodo, &inodo) == FALLO) return FALLO;
+    
+    // comprobamos que el inodo tenga permisos de escritura
+    if ((inodo.permisos & 2) != PERMISO_ESCRITURA) { 
+        perror(RED "No hay permisos de escritura en mi_write_f\n"); printf(RESET);
+        return FALLO;
+    }
+
+    // calcular el primer BL a liberar
+    if ((nbytes % BLOCKSIZE) == 0) { 
+        primerBL = nbytes/BLOCKSIZE;
+    } else { 
+        primerBL = nbytes / BLOCKSIZE + 1;
+    }
+
+    // liberar los bloques sobrantes a partir del primer BL
+    int liberados = liberar_bloques_inodo(primerBL, &inodo);
+
+    // actualizar metadatos del inodo
+    inodo.tamEnBytesLog = nbytes;
+    inodo.numBloquesOcupados -= liberados;
+    inodo.mtime = time(NULL);
+    inodo.ctime = time(NULL);
+
+    // salvamos los cambios del inodo
+    if (escribir_inodo(ninodo, &inodo) == FALLO) return FALLO;
+    
+
+    return liberados;
+}

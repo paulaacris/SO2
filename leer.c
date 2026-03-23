@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
     // Montamos el dispositivo
     if (bmount(nombre_dispositivo) == FALLO){
         perror(RED "Error al montar el dispositivo\n" RESET);
-         return FALLO;  
+        return FALLO;  
     }
     
     // Creamos un buffer para almacenar los datos leídos y variables para controlar la lectura

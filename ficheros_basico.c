@@ -2,6 +2,8 @@
 
 #define DEBUG_leer_bit 0
 #define DEBUG_traducir_bloque_inodo 1
+#define DEBUG_liberar_bloques_inodo 1
+#define DEBUG_liberar_inodo 1
 
 /*
  *  calcla el tamaño en bloques del mapa de bits (cada bit representa un bloque)
@@ -529,6 +531,7 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
     inodo.atime = time(NULL);
     inodo.mtime = time(NULL);
     inodo.ctime = time(NULL);
+    inodo.btime = time(NULL);
     inodo.numBloquesOcupados = 0;
     // tamaños en bytes de punterosDirectos / tamaño en bytes de un elemento = numero de elementos
     for (int i = 0; i < (sizeof(inodo.punterosDirectos) / sizeof(inodo.punterosDirectos[0])); i++) {
@@ -771,4 +774,224 @@ int traducir_bloque_inodo(unsigned int inodo, unsigned int nblogico, unsigned ch
     }
 
     return ptr;
+}
+
+/*
+ * Libera (borra) un inodo (fichero/directorio) completo
+ * @param inodo inodo que vamos a liberar 
+ * @return numero de inodo liberado
+ */
+int liberar_inodo(unsigned int ninodo) {
+    inodo_t inodo;
+
+    // leer el inodo
+    if (leer_inodo(ninodo, &inodo) == FALLO) return FALLO;
+
+    // liberar todos los bloques de datos e índices (desde el bloque lógico 0)
+    int liberados = liberar_bloques_inodo(0, &inodo);
+
+    // actualizar los metadatos del inodo
+    inodo.numBloquesOcupados -= liberados;
+    inodo.tipo = 'l'; // marcar el inodo como libre 
+    inodo.tamEnBytesLog = 0;
+    
+    // actualizar la lista enlazada de inodos libres
+    struct superbloque SB; 
+    // leemos el SB
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+    
+    inodo.punterosDirectos[0] = SB.posPrimerInodoLibre;
+    SB.posPrimerInodoLibre = ninodo;
+
+    SB.cantInodosLibres ++; // bloques libres ya se incrementa en liberar_bloque
+    
+    // escribir el SB actualizado 
+    if (bwrite(posSB, &SB) == FALLO) return FALLO;
+
+    #if DEBUG_liberar_inodo
+        fprintf(stderr, "[liberar_inodo()→ Tras liberar inodo: primerInodoLibre=%d]\n", SB.posPrimerInodoLibre);
+    #endif
+    
+    inodo.ctime = time(NULL);
+
+    // escribir el inodo actualizado 
+    if (escribir_inodo(ninodo, &inodo) == FALLO) return FALLO;
+
+    return liberados;
+}
+
+/*
+ * Libera todos los bloques ocupados a partir del BL indicado (inclusive) - VERSION 2
+ * @param primerBL BL a partir del que vamos a liberar
+ * @param inodo inodo que vamos a liberar 
+ * @return total de bloques liberados
+ */
+int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
+    unsigned int nivel_punteros = 0, nBL = primerBL, ultimoBL, ptr = 0;
+    int nRangoBL = 0, liberados = 0, eof = 0;
+
+    // si el fichero esta vacio no hay nada que liberar
+    if (inodo->tamEnBytesLog == 0) {
+        return 0;
+    }
+
+    // calculamos cual será el ultimo BL a liberar
+    if ((inodo->tamEnBytesLog % BLOCKSIZE) == 0) {
+        ultimoBL = inodo->tamEnBytesLog / BLOCKSIZE -1;
+    } else {
+        ultimoBL = inodo->tamEnBytesLog / BLOCKSIZE;
+    }
+
+    #if DEBUG_liberar_bloques_inodo
+        fprintf(stderr, GRAY "[liberar_bloques_inodo()→ primer BL: %d, último BL: %d]\n" RESET, primerBL, ultimoBL);
+    #endif
+
+    // obtenemos el rango del BL
+    nRangoBL = obtener_nRangoBL(inodo, nBL, &ptr);
+    // si el rango es 0 es que el primer bloque a liberar es 0
+    if (nRangoBL == 0) {
+        liberados += liberar_directos(&nBL, ultimoBL, inodo, &eof); 
+    }
+    
+    // liberamos los bloques indirectos 
+    while (!eof) {
+        // actualizamos el rango 
+        nRangoBL = obtener_nRangoBL(inodo, nBL, &ptr);
+        nivel_punteros = nRangoBL;
+        // llamada recursiva para cada rama de indirectos 
+        liberados += liberar_indirectos_recursivo(&nBL, primerBL, ultimoBL, inodo, nRangoBL, nivel_punteros, &ptr, &eof); 
+    }
+
+    #if DEBUG_liberar_bloques_inodo
+        fprintf(stderr, GRAY "[liberar_bloques_inodo()→ total bloques liberados: %d]\n" RESET, liberados);
+    #endif
+    
+    return liberados;
+}
+
+/*
+ * Recorre y libera los bloques directos 
+ * @param nBL numero de bloque logico a liberar 
+ * @param ultimoBL ultimo bloque logico a liberar 
+ * @param inodo inodo que vamos a liberar
+ * @param eof 1 si es el final del fichero, 0 si no
+ * @return total de bloques liberados
+ */
+int liberar_directos (unsigned int *nBL, unsigned int ultimoBL, inodo_t *inodo, int *eof) {
+    int liberados = 0;
+
+    // mientras estemos en rango de punteros directos y no sea el final del fichero
+    while (*nBL < DIRECTOS && !*eof) {
+        if (inodo->punterosDirectos[*nBL] != 0) { // si el BL directo no es 0 (no está vacio)
+            #if DEBUG_liberar_bloques_inodo
+                fprintf(stderr, GRAY "[liberar_bloques_inodo()→ liberado BF %d de datos para BL %d]\n" RESET, inodo->punterosDirectos[*nBL], *nBL);
+            #endif
+            liberar_bloque(inodo->punterosDirectos[*nBL]); // lo liberamos 
+            inodo->punterosDirectos[*nBL] = 0; // ponemos el contenido a 0 (vacio)
+            liberados ++;
+        }
+
+        *nBL = *nBL + 1; // pasamso al siguiente bloque logico
+
+        // si ya hemos liberado todos los bloques marcamos final del fichero
+        if (*nBL > ultimoBL) {
+            *eof = 1;
+        }
+    }
+ 
+    return liberados;
+}
+
+/*
+ * Recorre y libera los bloques indirectos de manera recursiva, aplicando optimizacion de saltos  
+ * @param nBL numero de bloque logico a liberar 
+ * @param primerBL primer bloque logico a liberar 
+ * @param ultimoBL ultimo bloque logico a liberar 
+ * @param inodo inodo que vamos a liberar
+ * @param nRangoBL ranog del bloque logido (0:D, 1:I0, 2:I1, 3:I2)
+ * @param nivel_punteros nivel de profundidad 
+ * @param ptr puntero al bloque de índices
+ * @param eof 1 si es el final del fichero, 0 si no
+ * @return total de bloques liberados
+ */
+int liberar_indirectos_recursivo (unsigned int *nBL, unsigned int primerBL, unsigned int ultimoBL, inodo_t *inodo, int nRangoBL, unsigned int nivel_punteros, unsigned int *ptr, int *eof) {
+    int liberados = 0, modificado = 0;
+    unsigned int bloquePunteros[NPUNTEROS], bufferCeros[NPUNTEROS];
+    
+    // buffer de ceros para comparar
+    memset(bufferCeros, 0, BLOCKSIZE); 
+
+    // si el puntero al bloque de indices es 0 saltamos todos los BL que ese puntero cubre  
+    if (*ptr == 0) {
+        unsigned int nBL_anterior = *nBL; // para los comentarios de debug
+
+        switch (nivel_punteros) {
+            case 1: *nBL = INDIRECTOS0; break;
+            case 2: *nBL = INDIRECTOS1; break;
+            case 3: *nBL = INDIRECTOS2; break;
+        }
+
+        #if DEBUG_liberar_bloques_inodo
+            fprintf(stderr, GRAY "[liberar_bloques_inodo()→ Saltamos del BL %d al BL %d]\n" RESET, nBL_anterior, *nBL - 1);
+        #endif
+
+        return liberados;
+    }
+     
+    int indice_inicial = obtener_indice(*nBL, nivel_punteros);
+
+    // solo leemos el bloque si no estaba cargado ya previamente
+    if (indice_inicial == 0 || *nBL == primerBL) { 
+        // leemos el blqoue de punteros 
+        if (bread(*ptr, bloquePunteros) == FALLO) return FALLO;
+    }
+    
+   // Recorremos las entradas del bloque de punteros desde indice_inicial.
+    for (int i = indice_inicial; i < NPUNTEROS && !*eof; i++) {
+        if (bloquePunteros[i] != 0) {
+            // caso base: puntero que apunta al bloque de datos 
+            if (nivel_punteros == 1) {
+                #if DEBUG_liberar_bloques_inodo
+                    fprintf(stderr, GRAY "[liberar_bloques_inodo()→ liberado BF %d de datos para BL %d]\n" RESET, bloquePunteros[i], *nBL);
+                #endif
+                liberar_bloque(bloquePunteros[i]); // de datos
+                bloquePunteros[i] = 0;
+                modificado = 1;
+                liberados ++;
+                *nBL = *nBL +1; // avanzamos al siguiente BL
+            } 
+            // caos recursivo: estamso en el nivel 2 o 3, hay que bajar de nivel
+            else {
+                unsigned int ptr_antes = bloquePunteros[i];
+                liberados += liberar_indirectos_recursivo(nBL, primerBL, ultimoBL, inodo, nRangoBL, nivel_punteros - 1, &bloquePunteros[i], eof);
+
+                if (bloquePunteros[i] != ptr_antes) modificado = 1; // si despues de llamar a la funcion el puntero es diferente es que se ha modificado               
+            }
+        } else {
+            // salto si encontramos un puntero a 0 dentro del bloque 
+            switch (nivel_punteros) {
+                case 1: *nBL = *nBL + 1; break;
+                case 2: *nBL += NPUNTEROS; break;
+                case 3: *nBL += NPUNTEROS * NPUNTEROS; break;
+            }
+        }
+
+        // si ya hemos liberado todos los bloques marcamos final del fichero
+        if (*nBL > ultimoBL) *eof = 1;
+    }
+
+    // si el bloque de punteros ha quedado vacio
+    if (memcmp(bloquePunteros, bufferCeros, BLOCKSIZE) == 0) {
+        #if DEBUG_liberar_bloques_inodo
+            fprintf(stderr, GRAY "[liberar_bloques_inodo()→ liberado BF %d de punteros_nivel%d correspondiente al BL %d]\n" RESET, *ptr, nivel_punteros, *nBL);
+        #endif
+        liberar_bloque(*ptr); // liberamos el bloque de punteros 
+        *ptr = 0; // ponemos a 0 el puntero del nivel superior
+        liberados++;
+    } else if (modificado == 1) {
+        // si el bloque no esta vacion pero ha habido modificaciones lo slavamso
+        if (bwrite(*ptr, bloquePunteros) == FALLO) return FALLO; 
+    }
+
+    return liberados;
 }
