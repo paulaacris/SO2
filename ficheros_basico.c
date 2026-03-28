@@ -1,9 +1,5 @@
 #include "ficheros_basico.h"
 
-#define DEBUG_leer_bit 0
-#define DEBUG_traducir_bloque_inodo 1
-#define DEBUG_liberar_inodo 1
-
 /*
  *  calcla el tamaño en bloques del mapa de bits (cada bit representa un bloque)
  *  @param nbloques numero de bloques del disco
@@ -66,7 +62,7 @@ int initSB(unsigned int nbloques, unsigned int ninodos) {
     // no restamos a cantBloquesLibres el bloque de SB porqu elo hace luego initMB
 
     if (bwrite(posSB, &SB) == FALLO) { // escribimos SB en posSB
-        perror(RED "Error al escribir el SuperBloque en initSB\n"); printf(RESET);
+        fprintf(stderr, RED "Error al escribir el SuperBloque en initSB\n"RESET); 
         return FALLO;
     }
 
@@ -83,7 +79,7 @@ int initMB() {
 
     // leemos el SB
     if (bread(posSB, &SB) == FALLO) {
-        perror(RED "Error al leer el SuperBloque en initMB\n"); printf(RESET);
+        fprintf(stderr, RED "Error al leer el SuperBloque en initMB\n"RESET);
         return FALLO;
     }
 
@@ -101,7 +97,7 @@ int initMB() {
     int i; // valor persistente para saber por que bloque vamso
     for (i = 0; i < bloquesCompletosMB; i++) {
         if (bwrite(SB.posPrimerBloqueMB + i, bufferMB) == FALLO) {
-            perror(RED "Error al escribir bloque completo en initMB\n"); printf(RESET);
+            fprintf(stderr, RED "Error al escribir bloque completo en initMB\n"RESET);
             return FALLO;
         }
     }
@@ -123,7 +119,7 @@ int initMB() {
 
     // escribimos el bloque restante
     if (bwrite(SB.posPrimerBloqueMB + i, bufferMB) == FALLO) {
-        perror(RED "Error al escribir el bloque residual en initMB\n"); printf(RESET);
+        fprintf(stderr, RED "Error al escribir el bloque residual en initMB\n"RESET);
         return FALLO;
     }
 
@@ -132,7 +128,7 @@ int initMB() {
 
     // guardamos la nueva informacion del SB
     if (bwrite(posSB, &SB) == FALLO) {
-        perror(RED "Error al actualizar el SuperBloque en initMB\n"); printf(RESET);
+        fprintf(stderr, RED "Error al actualizar el SuperBloque en initMB\n"RESET);
         return FALLO;
     }
 
@@ -152,7 +148,7 @@ int initAI() {
 
     // leemos el SB
     if (bread(posSB, &SB) == FALLO) {
-        perror(RED "Error al leer el SuperBloque en initAI\n"); printf(RESET);
+        fprintf(stderr, RED "Error al leer el SuperBloque en initAI\n"RESET);
         return FALLO;
     }
 
@@ -163,7 +159,7 @@ int initAI() {
     for (int i = SB.posPrimerBloqueAI; i <= SB.posUltimoBloqueAI; i++) {
         // leemos el bloque
         if (bread(i, inodos) == FALLO) {
-            perror(RED "Error al leer bloque de inodos en initAI\n"); printf(RESET);
+            fprintf(stderr, RED "Error al leer bloque de inodos en initAI\n");
             return FALLO;
         }
 
@@ -185,7 +181,7 @@ int initAI() {
 
         // escribimos el bloque de inodos ya enlazados
         if (bwrite(i, inodos) == FALLO) {
-            perror(RED "Error al escribir el bloque de inodos en initAI\n"); printf(RESET);
+            fprintf(stderr, RED "Error al escribir el bloque de inodos en initAI\n"RESET);
             return FALLO;
         }
     }
@@ -203,7 +199,7 @@ int escribir_bit(unsigned int nbloque, unsigned int bit) {
     // leer el SB
     struct superbloque SB;
     if (bread(posSB, &SB) == FALLO) {
-        perror(RED "Error al leer el SuperBloque en escribir_bit\n"); printf(RESET);
+        fprintf(stderr, RED "Error al leer el SuperBloque en escribir_bit\n"RESET); 
         return FALLO;
     }
 
@@ -923,7 +919,7 @@ int liberar_indirectos_recursivo (unsigned int *nBL, unsigned int primerBL, unsi
     // si el puntero al bloque de indices es 0 saltamos todos los BL que ese puntero cubre  
     if (*ptr == 0) {
         fprintf(stderr, YELLOW "HOLA HOLA\n" RESET); // NUNCA LLEGA A ENTRAR EN EL IF
-        switch (nivel_punteros) {
+        switch (nRangoBL) {
             case 1: 
                 #if DEBUG_liberar_inodo
                     fprintf(stderr, GRAY "[liberar_bloques_inodo()→ Saltamos del BL %d al BL %ld]\n" RESET, *nBL, INDIRECTOS0);
@@ -979,9 +975,29 @@ int liberar_indirectos_recursivo (unsigned int *nBL, unsigned int primerBL, unsi
         } else {
             // salto si encontramos un puntero a 0 dentro del bloque 
             switch (nivel_punteros) {
-                case 1: *nBL = *nBL + 1; break;
-                case 2: *nBL += NPUNTEROS; break;
-                case 3: *nBL += NPUNTEROS * NPUNTEROS; break;
+                case 1: 
+                    
+                    *nBL = *nBL + 1; 
+                    
+                    break;
+                case 2: 
+                    #if DEBUG_liberar_inodo
+                        fprintf(stderr, BLUE "[liberar_bloques_inodo()→ Saltamos del BL %d " RESET, *nBL);
+                    #endif
+                    *nBL += NPUNTEROS; 
+                    #if DEBUG_liberar_inodo
+                        fprintf(stderr, BLUE "al BL %d]\n" RESET, *nBL);
+                    #endif
+                    break;
+                case 3: 
+                    #if DEBUG_liberar_inodo
+                        fprintf(stderr, YELLOW "[liberar_bloques_inodo()→ Saltamos del BL %d " RESET, *nBL);
+                    #endif
+                    *nBL += NPUNTEROS * NPUNTEROS; 
+                    #if DEBUG_liberar_inodo
+                        fprintf(stderr, YELLOW "al BL %d]\n" RESET, *nBL);
+                    #endif
+                    break;
             }
         }
 
@@ -992,7 +1008,7 @@ int liberar_indirectos_recursivo (unsigned int *nBL, unsigned int primerBL, unsi
     // si el bloque de punteros ha quedado vacio
     if (memcmp(bloquePunteros, bufferCeros, BLOCKSIZE) == 0) {
         #if DEBUG_liberar_inodo
-            fprintf(stderr, ORANGE "[liberar_bloques_inodo()→ liberado BF %d de punteros_nivel%d correspondiente al BL %d]\n" RESET, *ptr, nivel_punteros, *nBL);
+            fprintf(stderr, ORANGE "[liberar_bloques_inodo()→ liberado BF %d de punteros_nivel%d correspondiente al BL %d]\n" RESET, *ptr, nivel_punteros, *nBL); // ESTE ULTIMO VALOR MAL 
         #endif
         liberar_bloque(*ptr); // liberamos el bloque de punteros 
         *ptr = 0; // ponemos a 0 el puntero del nivel superior

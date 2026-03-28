@@ -302,7 +302,7 @@ int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
  *  Trunca un fichero/directorio a los bytes indicados, liberando los bloques necesarios
  *  @param ninodo número del inodo a truncar
  *  @param nbytes nuevo tamaño en bytes al que queremos dejar el fichero
- *  @return 
+ *  @return cantidad de bloques liberados 
  */
 int mi_truncar_f(unsigned int ninodo, unsigned int nbytes) {
     inodo_t inodo;

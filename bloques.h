@@ -11,6 +11,11 @@
 #define EXITO 0 //para gestión errores
 #define FALLO -1 //para gestión errores
 
+#define DEBUG_leer_bit 0
+#define DEBUG_traducir_bloque_inodo 0
+#define DEBUG_liberar_inodo 0
+#define DEBUG_buscar_entrada 1
+
 #define BLACK      "\x1B[30m"
 #define RED           "\x1b[31m"
 #define GREEN      "\x1b[32m"

@@ -1,4 +1,4 @@
-#include "ficheros_basico.h"
+#include "directorios.h"
 
 // $ ./mi_mkfs <nombre_dispositivo> <nbloques>
 

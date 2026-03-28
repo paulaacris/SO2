@@ -12,7 +12,7 @@ int bmount(const char *camino){
     descriptor = open(camino, O_RDWR | O_CREAT, 0666);
 
     if (descriptor == FALLO) {
-        perror(RED"Error al abrir el fichero en bmount\n"); printf(RESET);
+        fprintf(stderr, RED"Error al abrir el fichero en bmount\n"RESET);
     }
     
     return descriptor;
@@ -27,7 +27,7 @@ int bumount() {
     descriptor = close(descriptor);
 
     if (descriptor == FALLO) {
-        perror(RED"Error al cerrar el fichero en bumount\n"); printf(RESET);
+        fprintf(stderr, RED"Error al cerrar el fichero en bumount\n"RESET);
         return FALLO; 
     }
 
@@ -42,11 +42,11 @@ int bumount() {
  */
 int bwrite(unsigned int nbloque, const void *buf) {
     // movemos el puntero al offset correcto 
-    lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET); // descriptor, dondenos queremos move, donde empezamos (incio dle fichero)
+    if (lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET) == FALLO) return FALLO; // descriptor, dondenos queremos move, donde empezamos (incio dle fichero)
     
     // escribimos el bloque
     if (write(descriptor, buf, BLOCKSIZE) == FALLO) {
-        perror(RED"Error al escribir en el bloque en bwrite\n"); printf(RESET);
+        fprintf(stderr, RED"Error al escribir en el bloque en bwrite\n"RESET); 
         return FALLO;      
     }
 
@@ -61,11 +61,11 @@ int bwrite(unsigned int nbloque, const void *buf) {
  */
 int bread(unsigned int nbloque, void *buf) {
     // movemos el puntero al offset correcto
-    lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET);
+    if (lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET) == FALLO) return FALLO;
     
     // leemos el bloque y lo volcamos en el buffer
     if (read(descriptor, buf, BLOCKSIZE) == FALLO){
-        perror(RED"Error al leer el bloque en bread\n"); printf(RESET);
+        fprintf(stderr, RED"Error al leer el bloque en bread\n"RESET); 
         return FALLO;   
     }
 
