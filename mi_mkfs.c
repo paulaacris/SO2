@@ -1,4 +1,4 @@
-#include "ficheros_basico.h"
+#include "directorios.h"
 
 // $ ./mi_mkfs <nombre_dispositivo> <nbloques>
 
@@ -10,7 +10,7 @@
  */
 int main(int argc, char **argv) {
     if (argc != 3) {
-        perror(RED"Error de sintaxis. \nUso: ./mi_mkfs <nombre_dispositivo> <nbloques>\n"); printf(RESET);
+        fprintf(stderr, RED"Error de sintaxis. \nUso: ./mi_mkfs <nombre_dispositivo> <nbloques>\n"RESET); 
         return FALLO;
     }
  
@@ -26,46 +26,46 @@ int main(int argc, char **argv) {
 
     // montar el dispositivo virtual 
     if (bmount(camino) == FALLO) {
-        perror(RED"Error al abrir/crear el fichero"); printf(RESET);
+        fprintf(stderr, RED"Error al abrir/crear el fichero"RESET); 
         return FALLO; // si no se puede abrir/crear el disco no importa seguir
     }
 
     // inicializamos el fichero a 0s con bwrite
     for (int i = 0; i < nbloques; i++) {
         if (bwrite(i, buffer) == FALLO) {
-            perror(RED"Error al escribir en el fichero"); printf(RESET);
+            fprintf(stderr, RED"Error al escribir en el fichero"RESET);
             return FALLO;
         }
     }
 
     // inicializamos el SB
     if (initSB(nbloques, ninodos) == FALLO){
-        perror(RED"Error al inicializar el SB"); printf(RESET);
+        fprintf(stderr, RED"Error al inicializar el SB"RESET); 
         return FALLO;
     }
 
     // inicializamos el MB
     if (initMB() == FALLO){
-        perror(RED"Error al inicializar el MB"); printf(RESET);
+        fprintf(stderr, RED"Error al inicializar el MB"RESET);
         return FALLO;
     }
 
     // inicializamos el AI
     if (initAI() == FALLO){
-        perror(RED"Error al inicializar el AI"); printf(RESET);
+        fprintf(stderr, RED"Error al inicializar el AI"RESET); 
         return FALLO;
     }
 
     // crear el directorio raiz (tipo directorio con permisos rwx)
     int inodoRaiz = reservar_inodo('d', 7);
     if (inodoRaiz == FALLO) {
-        perror(RED"Error al reservar el inodo raiz"); printf(RESET);
+        fprintf(stderr, RED"Error al reservar el inodo raiz"RESET); 
         return FALLO;
     }
 
     // 3. desmontamos el dispositivo virtual
     if (bumount() == FALLO) {
-        perror(RED"Error al cerrar el fichero"); printf(RESET);
+        fprintf(stderr, RED"Error al cerrar el fichero"RESET);
         return FALLO;
     }
 }

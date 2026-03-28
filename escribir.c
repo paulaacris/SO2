@@ -20,7 +20,7 @@ int main (int argc, char *argv[]) {
     int diferentes_inodos = atoi(argv[3]);
     // Calculamos el número de bytes a escribir
     int nbytes = strlen(texto);
-    printf("longitud texto: %d\n\n", nbytes);
+    printf("longitud texto: %d\n", nbytes);
 
     // Montamos el dispositivo
     if (bmount(nombre_dispositivo) == FALLO) {
