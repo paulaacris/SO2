@@ -45,10 +45,7 @@ int bwrite(unsigned int nbloque, const void *buf) {
     if (lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET) == FALLO) return FALLO; // descriptor, dondenos queremos move, donde empezamos (incio dle fichero)
     
     // escribimos el bloque
-    if (write(descriptor, buf, BLOCKSIZE) == FALLO) {
-        fprintf(stderr, RED"Error al escribir en el bloque en bwrite\n"RESET); 
-        return FALLO;      
-    }
+    if (write(descriptor, buf, BLOCKSIZE) == FALLO) return FALLO;      
 
     return BLOCKSIZE;
 }
@@ -64,10 +61,7 @@ int bread(unsigned int nbloque, void *buf) {
     if (lseek(descriptor, nbloque*BLOCKSIZE, SEEK_SET) == FALLO) return FALLO;
     
     // leemos el bloque y lo volcamos en el buffer
-    if (read(descriptor, buf, BLOCKSIZE) == FALLO){
-        fprintf(stderr, RED"Error al leer el bloque en bread\n"RESET); 
-        return FALLO;   
-    }
+    if (read(descriptor, buf, BLOCKSIZE) == FALLO) return FALLO;   
 
     return BLOCKSIZE;
 }
