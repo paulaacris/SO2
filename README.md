@@ -31,5 +31,5 @@ Se ha implementado la "Versión 2" de la función de liberación con dos mejoras
    - Mejora 1 (Salto por eliminación): Se saltan los bloques lógicos restantes que no requieren exploración tras haber eliminado un bloque de punteros completo (detección mediante memcmp() con un bloque de ceros).
    - Mejora 2 (Salto por puntero nulo): Se saltan los bloques lógicos que no es necesario explorar cuando se detecta que un puntero a un bloque de punteros ya está a 0, evitando descender innecesariamente en la jerarquía.
    - Control de Escritura: Se utiliza un array 'bloque_modificado' para ejecutar 
-     'bwrite()' solo en aquellos bloques de punteros que realmente han cambiado.
-*******************************************************************************
+    'bwrite()' solo en aquellos bloques de punteros que realmente han cambiado.
+
