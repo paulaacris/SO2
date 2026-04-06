@@ -1,3 +1,9 @@
+/**
+ * @file directorios.h
+ * @author Paula Cristina Morro Negre 
+ * @author Maria Teresa Sbert Gomila
+*/
+
 #include "ficheros.h"
 
 #define TAMNOMBRE 60 //tamaño del nombre de directorio o fichero, en Ext2 = 256

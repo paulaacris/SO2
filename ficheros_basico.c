@@ -1,3 +1,9 @@
+/**
+ * @file ficheros_basico.c
+ * @author Paula Cristina Morro Negre 
+ * @author Maria Teresa Sbert Gomila
+*/
+
 #include "ficheros_basico.h"
 
 #if DEBUG_liberar_inodo

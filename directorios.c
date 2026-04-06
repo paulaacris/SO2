@@ -1,3 +1,9 @@
+/**
+ * @file directorios.c
+ * @author Paula Cristina Morro Negre 
+ * @author Maria Teresa Sbert Gomila
+*/
+
 #include "directorios.h"
 
 /*

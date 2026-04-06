@@ -1,3 +1,9 @@
+/**
+ * @file permitir.c
+ * @author Paula Cristina Morro Negre 
+ * @author Maria Teresa Sbert Gomila
+*/
+
 #include "ficheros.h"
 
 int main(int argc, char *argv[]) {

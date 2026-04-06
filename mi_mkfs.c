@@ -1,3 +1,9 @@
+/**
+ * @file mi_mkfs.c
+ * @author Paula Cristina Morro Negre 
+ * @author Maria Teresa Sbert Gomila
+*/
+
 #include "directorios.h"
 
 // $ ./mi_mkfs <nombre_dispositivo> <nbloques>
