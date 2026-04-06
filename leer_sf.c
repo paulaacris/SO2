@@ -3,7 +3,7 @@
 #define NIVEL2 0
 #define NIVEL3 0
 #define NIVEL4 0
-#define NIVEL7 1
+#define NIVEL7 0
 
 void mostrar_buscar_entrada(char *camino, char reservar) {
     unsigned int p_inodo_dir = 0;
