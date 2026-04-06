@@ -24,8 +24,8 @@ Implementación de un sistema de ficheros basado en una estructura de inodos, de
 - El sistema tiene un BLOCKSIZE de 1024 bytes.
 
 ## MEJORAS REALIZADAS:
-1. **Optimización de la estructura de los inodos**
-   Se ha implementado el inodo utilizando una 'union' con una estructura anónima y un array de padding fijo (INODOSIZE). Esto garantiza que el tamaño del inodo en disco sea siempre constante e independiente de la arquitectura o del alineamiento interno del compilador, evitando errores de cálculo manual en el relleno de la estructura y facilitando el acceso a sus campos.
+### Optimización de la estructura de los inodos
+Se ha implementado el inodo utilizando una 'union' con una estructura anónima y un array de padding fijo (INODOSIZE). Esto garantiza que el tamaño del inodo en disco sea siempre constante e independiente de la arquitectura o del alineamiento interno del compilador, evitando errores de cálculo manual en el relleno de la estructura y facilitando el acceso a sus campos.
 2. **Optimización en la liberación de los bloques:** Se ha implementado la "Versión 2" de la función de liberación con dos mejoras de saltos:
    - Mejora 1 (Salto por eliminación): Se saltan los bloques lógicos restantes que no requieren exploración tras haber eliminado un bloque de punteros completo (detección mediante memcmp() con un bloque de ceros).
    - Mejora 2 (Salto por puntero nulo): Se saltan los bloques lógicos que no es necesario explorar cuando se detecta que un puntero a un bloque de punteros ya está a 0, evitando descender innecesariamente en la jerarquía.
