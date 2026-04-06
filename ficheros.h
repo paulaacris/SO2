@@ -1,3 +1,9 @@
+/**
+ * @file ficheros.h
+ * @author Paula Cristina Morro Negre 
+ * @author Maria Teresa Sbert Gomila
+*/
+
 #include "ficheros_basico.h"
 
 #define PERMISO_ESCRITURA 2

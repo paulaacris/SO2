@@ -1,3 +1,9 @@
+/**
+ * @file bloques.c
+ * @author Paula Cristina Morro Negre 
+ * @author Maria Teresa Sbert Gomila
+*/
+
 #include "bloques.h"
 
 static int descriptor = 0;

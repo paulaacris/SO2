@@ -1,3 +1,9 @@
+/**
+ * @file ficheros_basico.h
+ * @author Paula Cristina Morro Negre 
+ * @author Maria Teresa Sbert Gomila
+*/
+
 #include "bloques.h"
 
 #include <time.h>   //para los sellos de tiempo

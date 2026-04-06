@@ -1,3 +1,9 @@
+/**
+ * @file leer_sf.c
+ * @author Paula Cristina Morro Negre 
+ * @author Maria Teresa Sbert Gomila
+*/
+
 #include "directorios.h"
 
 #define NIVEL2 0
