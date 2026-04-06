@@ -16,6 +16,8 @@ Implementación de un sistema de ficheros basado en una estructura de inodos, de
 - **escribir:** ./escribir <nombre_dispositivo> <"texto"> <diferentes_inodos>
 - **leer:** ./leer <nombre_dispositivo> <ninodo>
 - **truncar:** ./truncar <nombre_dispositivo> <ninodo> <nbytes>
+- **permitir:** ./permitir <nombre_dispositivo> <ninodo> <permisos>
+- **truncar:** ./truncar <nombre_dispositivo> <ninodo> <nbytes>
 
 ## RESTRICCIONES DEL PROGRAMA:
 - El nombre de fichero/directorio está limitado a 60 caracteres (TAMNOMBRE).
