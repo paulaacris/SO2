@@ -16,10 +16,10 @@ echo -e "\x1B[38;2;17;245;120m$./escribir\x1b[0m"
 ./escribir
 echo
 echo "################################################################################"
-echo -e "\x1B[38;2;17;245;120m$ ./escribir disco "$(cat texto2.txt)" 0"
+echo -e "\x1B[38;2;17;245;120m$ ./escribir disco "$(cat test/texto2.txt)" 0"
 echo -e "#escribimos el texto2.txt en los offsets  9.000, 209.000, 30.725.000,"
 echo -e "# 409.605.000 y 480.000.000 de un mismo inodo\x1b[0m"
-./escribir disco "$(cat texto2.txt)" 0
+./escribir disco "$(cat test/texto2.txt)" 0
 echo
 echo "################################################################################"
 echo -e "\x1B[38;2;17;245;120m$ ./permitir disco 1 0"
