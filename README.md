@@ -1,6 +1,4 @@
-*******************************************************************************
 # SISTEMAS OPERATIVOS - SISTEMA DE FICHEROS
-*******************************************************************************
 
 Autoras: Paula Cristina Morro Negre, Maria Teresa Sbert Gomila
 
