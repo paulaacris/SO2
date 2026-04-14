@@ -14,7 +14,8 @@
 #define tamSB 1
 #define INODOSIZE 128 // tamaño en bytes de un inodo
 
-#define NPUNTEROS    (BLOCKSIZE / sizeof(unsigned int))   // 256 punteros por bloque
+// CON BLOCKSIZE 1024
+#define NPUNTEROS    (BLOCKSIZE / sizeof(unsigned int))   // 256 punteros por bloque 
 #define DIRECTOS 12
 #define INDIRECTOS0   (NPUNTEROS + DIRECTOS)    // 268
 #define INDIRECTOS1   (NPUNTEROS * NPUNTEROS + INDIRECTOS0)    // 65.804

@@ -38,8 +38,12 @@ int main(int argc, char *argv[]) {
     // Limpiamos el buffer inicialmente
     memset(buffer, 0, TAM_BUFFER);
 
-    // Bucle de lectura: leemos de TAM_BUFFER en TAM_BUFFER hasta que mi_read_f devuelva 0
-    while ((leidos = mi_read_f(ninodo, buffer, offset, TAM_BUFFER)) > 0) {
+    // Bucle de lectura: leemos de TAM_BUFFER en TAM_BUFFER hasta que mi_read_f devuelva 0 (EOF)
+    while ((leidos = mi_read_f(ninodo, buffer, offset, TAM_BUFFER)) != 0) {
+        if (leidos == FALLO) {
+            fprintf(stderr, RED "No hay permisos de lectura\n" RESET);
+            break;;
+        }
         // Escribimos en la salida estándar (1) lo que hayamos leído
         write(1, buffer, leidos);
         // Actualizamos el total de bytes leídos y el offset para la siguiente lectura 
@@ -54,6 +58,7 @@ int main(int argc, char *argv[]) {
     // Mostramos stat para ver que el tamaño coincide
     struct STAT stat;
     if (mi_stat_f(ninodo, &stat) == FALLO) {
+        printf("AQUI");
         return FALLO;
     }
 

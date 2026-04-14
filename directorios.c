@@ -89,7 +89,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
     // leemos el inodo directorio
     if (leer_inodo(*p_inodo_dir, &inodo_dir) < 0) return ERROR_PERMISO_LECTURA;
     // comprobar si el directorio tiene permisos de lectura
-    if ((inodo_dir.permisos & 4) != PERMISO_LECTURA) {
+    if ((inodo_dir.permisos & PERMISO_LECTURA) != PERMISO_LECTURA) {
         #if DEBUG_buscar_entrada
             fprintf(stderr, GRAY"[buscar_entrada() -> el inodo %u no tiene permisos de lectura]\n"RESET, *p_inodo_dir);
         #endif
@@ -143,7 +143,7 @@ int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsign
                 if (inodo_dir.tipo == 'f') return ERROR_NO_SE_PUEDE_CREAR_ENTRADA_EN_UN_FICHERO;
 
                 // para crear una entrada necesitamos permiso de escritura en el directorio padre
-                if ((inodo_dir.permisos & 2) != PERMISO_ESCRITURA) return ERROR_PERMISO_ESCRITURA;
+                if ((inodo_dir.permisos & PERMISO_ESCRITURA) != PERMISO_ESCRITURA) return ERROR_PERMISO_ESCRITURA;
 
                 strcpy(entrada.nombre, inicial); // Asignamos el nombre buscado a la nueva entrada 
 

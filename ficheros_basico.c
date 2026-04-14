@@ -425,8 +425,8 @@ int leer_inodo(unsigned int ninodo, inodo_t *inodo) {
 
 /*
  *  Encuentra el primer inodo libre (dato del SB), lo reserva (con escribir_inodo) y actualiza la lista enlazada
- *  @param tipo
- *  @param permisos
+ *  @param tipo tipo de inodo que queremos reservar 
+ *  @param permisos permisos que le vamos a dar al inodo
  *  @return numeor de inodo reservado
  */
 int reservar_inodo(unsigned char tipo, unsigned char permisos) {
@@ -458,13 +458,10 @@ int reservar_inodo(unsigned char tipo, unsigned char permisos) {
     inodo.ctime = time(NULL);
     inodo.btime = time(NULL);
     inodo.numBloquesOcupados = 0;
-    // tamaños en bytes de punterosDirectos / tamaño en bytes de un elemento = numero de elementos
-    for (int i = 0; i < (sizeof(inodo.punterosDirectos) / sizeof(inodo.punterosDirectos[0])); i++) {
-        inodo.punterosDirectos[i] = 0; // 0 porque no apuntan a nada
-    }
-    for (int i = 0; i < (sizeof(inodo.punterosIndirectos) / sizeof(inodo.punterosIndirectos[0])); i++){
-        inodo.punterosIndirectos[i] = 0; // 0 porque no apuntan a nada
-    }
+
+    // Inicializamos a 0 todos los punteros porque inicialmente no apuntan a nada
+    memset(inodo.punterosDirectos, 0, sizeof(inodo.punterosDirectos));
+    memset(inodo.punterosIndirectos, 0, sizeof(inodo.punterosIndirectos));
 
     // escribimos el inodo inicializado en la posicion dle que era el primer inodo libre (posInodoReservado)
     if (escribir_inodo(posInodoReservado, &inodo) == FALLO) return FALLO;

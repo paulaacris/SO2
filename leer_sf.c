@@ -55,10 +55,10 @@ int main(int argc, char **argv) {
     printf("totBloques = %d\n", SB.totBloques );
     printf("totInodos = %d\n", SB.totInodos );
 
-    printf ("\nsizeof struct superbloque is: %lu\n", sizeof(struct superbloque));
-    printf ("sizeof struct inodo is: %lu\n", sizeof(inodo_t));
-
     # if NIVEL2
+        printf ("\nsizeof struct superbloque is: %lu\n", sizeof(struct superbloque));
+        printf ("sizeof struct inodo is: %lu\n", sizeof(inodo_t));
+        
         printf(ROSE"\nRECORRIDO LISTA ENLAZADA DE INODOS LIBRES\n"RESET);
         
         inodo_t inodos[BLOCKSIZE/INODOSIZE]; // buffer para leer un bloque de inodos (8 inodos)

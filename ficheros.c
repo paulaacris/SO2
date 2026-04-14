@@ -25,7 +25,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     
     // comprobamos que tenga los permisos necesarios
     // el segundo bit tiene que estar a 1 (010, 011, 110, 111)
-    if ((inodo.permisos & 2) != PERMISO_ESCRITURA) return FALLO;
+    if ((inodo.permisos & PERMISO_ESCRITURA) != PERMISO_ESCRITURA) return FALLO;
     
 
     int primerBL = offset/BLOCKSIZE; // bloque logico en el que empezaremos a escribir
@@ -122,7 +122,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     
     // comprobamos que tenga los permisos necesarios
     // el tercer bit tiene que estar a 1 (100, 101, 110, 111)
-    if ((inodo.permisos & 4) != PERMISO_LECTURA) return FALLO;
+    if ((inodo.permisos & PERMISO_LECTURA) != PERMISO_LECTURA) return FALLO;
 
     if (offset >= inodo.tamEnBytesLog) {
         return bytes_leidos;
