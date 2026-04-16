@@ -6,10 +6,11 @@ Autoras: Paula Cristina Morro Negre, Maria Teresa Sbert Gomila
 Implementación de un sistema de ficheros basado en una estructura de inodos, desarrollado por capas (niveles). El sistema permite la gestión de un disco virtual mediante el uso de un mapa de bits para bloques e inodos, y la organización de datos en directorios.
 
 ## ESTRUCTURA DE CAPAS IMPLEMENTADA:
-1. **Capa de Bloques (bloques.c):** Gestión del hardware virtual.
-2. **Capa de Ficheros Básica (ficheros_basico.c):** Inicialización de estructuras (SB, MB, AI) y gestión de inodos/bloques.
-3. **Capa de Ficheros (ficheros.c):** Lectura/escritura de bytes lógicos y gestión de STAT.
-4. **Capa de Directorios (directorios.c):** Gestión de la jerarquía de rutas, búsqueda de entradas y extracción de caminos.
+1. **Carpeta tests:** Carpeta donde se almacenan los scripts de prueba. 
+2. **Capa de Bloques (bloques.c):** Gestión del hardware virtual.
+3. **Capa de Ficheros Básica (ficheros_basico.c):** Inicialización de estructuras (SB, MB, AI) y gestión de inodos/bloques.
+4. **Capa de Ficheros (ficheros.c):** Lectura/escritura de bytes lógicos y gestión de STAT.
+5. **Capa de Directorios (directorios.c):** Gestión de la jerarquía de rutas, búsqueda de entradas y extracción de caminos.
 
 ## SINTAXIS DE LOS COMANDOS:
 - **mi_mkfs:** ``./mi_mkfs <nombre_dispositivo> <nbloques>``
