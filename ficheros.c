@@ -254,7 +254,7 @@ int mi_truncar_f(unsigned int ninodo, unsigned int nbytes) {
     if (leer_inodo(ninodo, &inodo) == FALLO) return FALLO;
     
     // comprobamos que el inodo tenga permisos de escritura
-    if ((inodo.permisos & 2) != PERMISO_ESCRITURA) return FALLO;
+    if ((inodo.permisos & PERMISO_ESCRITURA) != PERMISO_ESCRITURA) return FALLO;
 
     // calcular el primer BL a liberar
     if ((nbytes % BLOCKSIZE) == 0) { 
