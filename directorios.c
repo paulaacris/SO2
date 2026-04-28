@@ -221,3 +221,270 @@ void mostrar_error_buscar_entrada(int error) {
     }
 }
 
+/*
+ *  Función que crea un fichero/directorio y su entrada de directorio
+ *  @param camino cambino del fichero/directorio
+ *  @param permisos permisos que tendrá el fichero/directorio
+ *  @return 
+ */
+int mi_creat(const char *camino, unsigned char permisos) {
+    // leemos el SB para saber donde esta el inodo raiz 
+    struct superbloque SB;
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+    
+    unsigned int p_inodo_dir = SB.posInodoRaiz, p_inodo = 0, p_entrada = 0;
+    
+    // buscar_entrada() con reservar=1 para que cree el directorio si no existe 
+    int error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 1, permisos);
+
+    // esta función devuelve lo que devuelva buscar_entrada
+    return error;
+}
+
+/*
+ *  
+ *  @param camino cambino del fichero/directorio
+ *  @param buffer
+ *  @param tipo 
+ *  @param flag
+ *  @return 
+ */
+/*
+int mi_dir(const char *camino, char *buffer, char tipo, char flag) {
+    struct superbloque SB;
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+    unsigned int p_inodo_dir = SB.posInodoRaiz, p_inodo, p_entrada;
+    int err;
+
+    if ((err = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0)) < 0)
+        return err;
+
+    inodo_t inodo_dir, inodo;
+    if (leer_inodo(p_inodo, &inodo_dir) == FALLO)
+        return FALLO;
+
+    if (inodo_dir.tipo != tipo) {
+        fprintf(stderr, RED "Error: la sintaxis no concuerda con el tipo\n" RESET);
+        return FALLO;
+    }
+
+    if (tipo == 'f') {
+        if (leer_inodo(p_inodo_dir, &inodo_dir) == FALLO)
+            return FALLO;
+    } else {
+        p_inodo_dir = p_inodo;
+    }
+
+    struct entrada buffer_entradas[BLOCKSIZE / sizeof(struct entrada)];
+    memset(buffer_entradas, 0, BLOCKSIZE);
+    struct entrada entrada;
+
+    int cant_entradas_inodo, num_entrada_inodo;
+    if (tipo == 'd') {
+        cant_entradas_inodo = inodo_dir.tamEnBytesLog / sizeof(struct entrada);
+        num_entrada_inodo = 0;
+    } else {
+        cant_entradas_inodo = p_entrada + 1;
+        num_entrada_inodo = p_entrada;
+    }
+
+    strcpy(buffer, ""); // Inicializar el buffer vacío
+
+    for (; num_entrada_inodo < cant_entradas_inodo; num_entrada_inodo++) {
+        // Lógica de lectura de bloques de entradas
+        if (num_entrada_inodo % (BLOCKSIZE / sizeof(struct entrada)) == 0) {
+            memset(buffer_entradas, 0, BLOCKSIZE);
+            if (mi_read_f(p_inodo_dir, buffer_entradas, (num_entrada_inodo / (BLOCKSIZE / sizeof(struct entrada))) * BLOCKSIZE, BLOCKSIZE) < 0)
+                return FALLO;
+        }
+        entrada = buffer_entradas[num_entrada_inodo % (BLOCKSIZE / sizeof(struct entrada))];
+
+        if (entrada.ninodo == 0) continue; // Saltar entradas vacías
+
+        if (leer_inodo(entrada.ninodo, &inodo) == FALLO)
+            return FALLO;
+
+        if (flag == 'l') {
+            char tmp[TAMFILA]; // Buffer temporal para cada campo
+            
+            // 1. Tipo
+            sprintf(tmp, "%c\t", inodo.tipo);
+            strcat(buffer, tmp);
+
+            // 2. Permisos
+            strcat(buffer, (inodo.permisos & 4) ? "r" : "-");
+            strcat(buffer, (inodo.permisos & 2) ? "w" : "-");
+            strcat(buffer, (inodo.permisos & 1) ? "x" : "-");
+            strcat(buffer, "\t");
+
+            // 3. Tiempo (Alineado a 20 caracteres)
+            struct tm *tm = localtime(&inodo.mtime);
+            sprintf(tmp, "%-20.20d-%02d-%02d %02d:%02d:%02d\t", 
+                    tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, 
+                    tm->tm_hour, tm->tm_min, tm->tm_sec);
+            strcat(buffer, tmp);
+
+            // 4. Tamaño (Alineado a 10 caracteres)
+            sprintf(tmp, "%-10u\t", inodo.tamEnBytesLog);
+            strcat(buffer, tmp);
+        }
+
+        // --- ASIGNAR COLORES AL NOMBRE ---
+        if (inodo.tipo == 'd') {
+            strcat(buffer, BLUE);        // Azul para directorios
+        } else if (inodo.permisos & 1) {
+            strcat(buffer, GREEN);       // Verde para archivos ejecutables (x)
+        } else {
+            strcat(buffer, RESET);       // Normal para el resto
+        }
+
+        strcat(buffer, entrada.nombre);
+        strcat(buffer, RESET);           // Siempre resetear al final del nombre
+        strcat(buffer, (flag == 'l') ? "\n" : "\t");
+    }
+
+    return cant_entradas_inodo;
+}
+*/
+
+int mi_dir(const char *camino, char *buffer, char tipo, char flag) {
+    struct superbloque SB;
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+    unsigned int p_inodo_dir = SB.posInodoRaiz, p_inodo, p_entrada;
+    int err;
+
+    if ((err = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0)) < 0)
+        return err;
+
+    inodo_t inodo_dir, inodo;
+    if (leer_inodo(p_inodo, &inodo_dir) == FALLO)
+        return FALLO;
+
+    if (inodo_dir.tipo != tipo) {
+        fprintf(stderr, RED "Error: la sintaxis no concuerda con el tipo\n" RESET);
+        return FALLO;
+    }
+
+    if (tipo == 'f') {
+        // si es un fichero, leer el inodo del directorio que lo contiene
+        if (leer_inodo(p_inodo_dir, &inodo_dir) == FALLO)
+            return FALLO;
+    } else {
+        p_inodo_dir = p_inodo;
+    }
+
+    struct entrada buffer_entradas[BLOCKSIZE / sizeof(struct entrada)];
+    memset(buffer_entradas, 0, BLOCKSIZE);
+    struct entrada entrada = buffer_entradas[0];
+
+    int cant_entradas_inodo, num_entrada_inodo;
+    if (tipo == 'd') {
+        cant_entradas_inodo = inodo_dir.tamEnBytesLog / sizeof(struct entrada);
+        num_entrada_inodo = 0;
+    } else {
+        cant_entradas_inodo = p_entrada + 1;
+        num_entrada_inodo = p_entrada;
+    }
+
+    for (; num_entrada_inodo < cant_entradas_inodo; num_entrada_inodo++) {
+        if (tipo == 'd') {
+            if (num_entrada_inodo % (BLOCKSIZE / sizeof(struct entrada)) == 0) {
+                memset(buffer_entradas, 0, BLOCKSIZE);
+                if (mi_read_f(p_inodo_dir, buffer_entradas, num_entrada_inodo * sizeof(struct entrada), BLOCKSIZE) < 0)
+                    return FALLO;
+            }
+            entrada = buffer_entradas[num_entrada_inodo % (BLOCKSIZE / sizeof(struct entrada))];  // leer siguiente entrada
+        } else {
+            memset(buffer_entradas, 0, BLOCKSIZE);
+            int num_bloque = num_entrada_inodo * sizeof(struct entrada) / BLOCKSIZE;
+            if (mi_read_f(p_inodo_dir, buffer_entradas, num_bloque * BLOCKSIZE, BLOCKSIZE) < 0)
+                return FALLO;
+            entrada = buffer_entradas[num_entrada_inodo % (BLOCKSIZE / sizeof(struct entrada))];  // leer siguiente entrada
+        }
+
+        if (leer_inodo(entrada.ninodo, &inodo) == FALLO)
+            return FALLO;
+
+        if (flag == 'l') {
+            char tmp[BLOCKSIZE]; 
+            // Importante: No uses strcat directamente sin asegurar que tmp está limpio y empieza de cero
+            sprintf(tmp, "%c\t", inodo.tipo); // USAR inodo.tipo, NO tipo
+            strcat(buffer, tmp);
+
+            // Permisos
+            strcat(buffer, (inodo.permisos & 4) ? "r" : "-");
+            strcat(buffer, (inodo.permisos & 2) ? "w" : "-");
+            strcat(buffer, (inodo.permisos & 1) ? "x" : "-");
+            strcat(buffer, "\t");
+
+            // Fecha
+            struct tm *tm;
+            tm = localtime(&inodo.mtime);
+            sprintf(tmp, "%d-%02d-%02d %02d:%02d:%02d\t", tm->tm_year + 1900, 
+                    tm->tm_mon + 1, tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
+            strcat(buffer, tmp);
+
+            // Tamaño
+            sprintf(tmp, "%d\t", inodo.tamEnBytesLog);
+            strcat(buffer, tmp);
+        }
+
+        // asignar colores al nombre de la entrada en función del tipo
+        if (inodo.tipo == 'd')  // es un directorio
+            strcat(buffer, BLUE);
+        else if (inodo.permisos & 1)  // es un fichero ejecutable
+            strcat(buffer, GREEN);
+
+        strcat(buffer, entrada.nombre);
+        strcat(buffer, RESET);  // resetear color de la entrada
+        strcat(buffer, (flag == 'l') ? "\n" : "\t");
+    }
+
+    return (tipo == 'd') ? cant_entradas_inodo : 1;
+}
+
+/*
+ *  Función que cambia los permisos de un fichero/directorio
+ *  @param camino cambino del fichero/directorio
+ *  @param permisos permisos que tendrá el fichero/directorio
+ *  @return 
+ */
+int mi_chmod(const char *camino, unsigned char permisos) {
+    // leemos el SB para saber donde esta el inodo raiz 
+    struct superbloque SB;
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+
+    unsigned int p_inodo_dir = SB.posInodoRaiz, p_inodo = 0, p_entrada = 0;
+    
+    // llamar a buscar_entrada para encontrar el inodo del fichero/directorio
+    int error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, permisos); // con 0 porque solo queremos mirar que exista, no crearlo
+
+    // si buscar_entrada devuelve algo que no sea EXITO devolvemos el error
+    if (error != EXITO) return error;
+
+    // llamar a mi_chmod_f para cambiar los permisos del inodo
+    return mi_chmod_f(p_inodo, permisos); // devolvemos lo que devuelva mi_chmod_f 
+}
+
+/*
+ *  Función para mostrar la información de un inodo de un fichero/directorio
+ *  @param camino cambino del fichero/directorio
+ *  @param permisos permisos que tendrá el fichero/directorio
+ *  @return 
+ */
+int mi_stat(const char *camino, struct STAT *p_stat) {
+    // leemos el SB para saber donde esta el inodo raiz 
+    struct superbloque SB;
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+
+    unsigned int p_inodo_dir = SB.posInodoRaiz, p_inodo = 0, p_entrada = 0;
+    
+    // llamar a buscar_entrada para encontrar el inodo del fichero/directorio
+    int error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0); // con 0 porque solo queremos mirar que exista, no crearlo
+
+    // si buscar_entrada devuelve algo que no sea EXITO devolvemos el error
+    if (error != EXITO) return error;
+
+    // si la entrada existe llamamos a mi_stat_f
+    return mi_stat_f(p_inodo, p_stat); // devolvemos lo que devuelva mi_stst_f
+}

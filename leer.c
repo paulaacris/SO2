@@ -4,7 +4,7 @@
  * @author Maria Teresa Sbert Gomila
 */
 
-#include "ficheros.h"
+#include "directorios.h"
 
 #define TAM_BUFFER 1500 // Tamaño del buffer para leer (valor razonable para la lectura)
 
