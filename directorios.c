@@ -6,6 +6,9 @@
 
 #include "directorios.h"
 
+#define TAMNOMBRE 60 //tamaño del nombre de directorio o fichero
+#define PROFUNDIDAD 32 //profundidad máxima del árbol de directorios
+
 /*
  *  Divide el camino en la parte inicial y en la parte final y da el tipo de inicial
  *  @param camino ruta de directorios para llegar al fichero/directorio indicado
@@ -488,3 +491,70 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
     // si la entrada existe llamamos a mi_stat_f
     return mi_stat_f(p_inodo, p_stat); // devolvemos lo que devuelva mi_stst_f
 }
+
+struct UltimaEntrada{
+  char camino [TAMNOMBRE*PROFUNDIDAD];
+  int p_inodo;
+};
+
+static struct UltimaEntrada UltimaEntradaEscritura = {"", 0};
+static struct UltimaEntrada UltimaEntradaLectura = {"", 0};
+
+static int buscar_cache(const char *camino, unsigned int *p_inodo, char es_lectura) {
+    if (es_lectura) {
+        if (strcmp(UltimaEntradaLectura.camino, camino) == 0) {
+            *p_inodo = UltimaEntradaLectura.p_inodo;
+            return 1;
+        }
+    } else {
+        if (strcmp(UltimaEntradaEscritura.camino, camino) == 0) {
+            *p_inodo = UltimaEntradaEscritura.p_inodo;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void actualizar_cache(const char *camino, unsigned int p_inodo, char es_lectura) {
+    if (es_lectura) {
+        strcpy(UltimaEntradaLectura.camino, camino);
+        UltimaEntradaLectura.p_inodo = p_inodo;
+    } else {
+        strcpy(UltimaEntradaEscritura.camino, camino);
+        UltimaEntradaEscritura.p_inodo = p_inodo;
+    }
+}
+
+int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes) {
+    unsigned int p_inodo = 0;
+    unsigned int p_inodo_dir = 0, p_entrada = 0;
+    int error;
+
+    if (!buscar_cache(camino, &p_inodo, 0)) {
+        struct superbloque SB;
+        if (bread(posSB, &SB) == FALLO) return FALLO;
+        p_inodo_dir = SB.posInodoRaiz;
+        error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
+        if (error != EXITO) return error;
+        actualizar_cache(camino, p_inodo, 0);
+    }
+
+    return mi_write_f(p_inodo, buf, offset, nbytes);
+}
+
+int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nbytes) {
+    unsigned int p_inodo = 0;
+    unsigned int p_inodo_dir = 0, p_entrada = 0;
+    int error;
+
+    if (!buscar_cache(camino, &p_inodo, 1)) {
+        struct superbloque SB;
+        if (bread(posSB, &SB) == FALLO) return FALLO;
+        p_inodo_dir = SB.posInodoRaiz;
+        error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0);
+        if (error != EXITO) return error;
+        actualizar_cache(camino, p_inodo, 1);
+    }
+
+    return mi_read_f(p_inodo, buf, offset, nbytes);
+} 
