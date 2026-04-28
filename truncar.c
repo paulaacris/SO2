@@ -4,7 +4,7 @@
  * @author Maria Teresa Sbert Gomila
 */
 
-#include "ficheros.h"
+#include "directorios.h"
 
 int main(int argc, char const *argv[]) {
     // Validamos el número de argumentos introducidos

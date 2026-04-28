@@ -137,7 +137,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     int desp1 = offset % BLOCKSIZE;
     int desp2 = (offset + nbytes - 1) % BLOCKSIZE;
 
-    // CASO 1: ESCRIBIMOS EN UN SOLO BLOQUE 
+    // CASO 1: LLEMOS DE UN SOLO BLOQUE 
     if (primerBL == ultimoBL) {
         nbfisico = traducir_bloque_inodo(ninodo, primerBL, 0);
         
@@ -149,7 +149,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         bytes_leidos = nbytes;
     }
 
-    // CASO 2: ESCRIBIMOS EN MAS DE UN BLOQUE
+    // CASO 2: LEEMOS DE MAS DE UN BLOQUE
     if (primerBL != ultimoBL) {
         // PRIMER BLOQUE 
         nbfisico = traducir_bloque_inodo(ninodo, primerBL, 0);
