@@ -20,19 +20,18 @@ int main(int argc, char *argv[]) {
     const char *disco = argv[1];
     const char *ruta = argv[2];
 
-    if (bmount(disco) == FALLO) {
-        fprintf(stderr, RED "Error: no se pudo montar el dispositivo '%s'\n" RESET, disco);
-        return FALLO;
-    }
+    if (bmount(disco) == FALLO) return FALLO;
 
+    // obtenemos los metadatos del fichero para comprobar tipo y tamaño lógico
     struct STAT stat;
     int error = mi_stat(ruta, &stat);
-    if (error != EXITO) {
+    if (error < 0) {
         mostrar_error_buscar_entrada(error);
         bumount();
         return FALLO;
     }
 
+    // Solo podemos hacer cat sobre ficheros, no directorios
     if (stat.tipo != 'f') {
         fprintf(stderr, RED "Error: la ruta indicada no es un fichero.\n" RESET);
         bumount();
@@ -44,6 +43,7 @@ int main(int argc, char *argv[]) {
     int leidos = 0;
     unsigned int total_leidos = 0;
 
+    // Leemos en bloques de TAMBUFFER hasta que no haya más datos
     while ((leidos = mi_read(ruta, buffer, offset, TAMBUFFER)) > 0) {
         if (write(1, buffer, leidos) != leidos) {
             perror(RED "Error al escribir en la salida estándar" RESET);
@@ -63,6 +63,8 @@ int main(int argc, char *argv[]) {
     if (total_leidos != stat.tamEnBytesLog) {
         fprintf(stderr, RED "Advertencia: bytes leídos (%u) no coinciden con tamEnBytesLog (%u).\n" RESET, total_leidos, stat.tamEnBytesLog);
     }
+
+    fprintf(stderr, "\nTotal_leidos %u\n", total_leidos);
 
     bumount();
     return EXITO;

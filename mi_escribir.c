@@ -26,39 +26,26 @@ int main(int argc, char *argv[]) {
     }
 
     int nbytes = strlen(texto);
+    fprintf(stderr, "longitud texto: %d\n", nbytes);
 
-    if (bmount(disco) == FALLO) {
-        fprintf(stderr, RED "Error: no se pudo montar el dispositivo '%s'\n" RESET, disco);
-        return FALLO;
-    }
+    if (bmount(disco) == FALLO) return FALLO;
+    
 
     // llamamos a mi_write para escribir el contenido en el fichero
-    int error = mi_write(ruta, contenido, 0, strlen(contenido));
-    if (error != EXITO) {
-        mostrar_error_buscar_entrada(error);
+    int error = mi_write(ruta, texto, offset, nbytes);
+    if (error < 0) {
+        if (error == FALLO) {
+            fprintf(stderr, RED "No hay permisos de escritura.\n"RESET); 
+        } else {
+            mostrar_error_buscar_entrada(error);
+        } 
         bumount();
         return FALLO;
     }
 
+    fprintf(stderr, "Bytes escritos: %d\n", error);
+
     // desmontamos el dispositivo
     if (bumount() == FALLO) return FALLO;
-    return EXI
-
-int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned int nbytes) {
-    // leemos el SB para saber donde esta el inodo raiz 
-    struct superbloque SB;
-    if (bread(posSB, &SB) == FALLO) return FALLO;
-
-    unsigned int p_inodo_dir = SB.posInodoRaiz, p_inodo = 0, p_entrada = 0;
-    
-    // llamar a buscar_entrada para encontrar el inodo del fichero/directorio
-    int error = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0); // con 0 porque solo queremos mirar que exista, no crearlo
-
-    // si buscar_entrada devuelve algo que no sea EXITO devolvemos el error
-    if (error != EXITO) return error;
-
-    // si la entrada existe llamamos a mi_write_f
-    return mi_write_f(p_inodo, buf, offset, nbytes); // devolvemos lo que devuelva mi_write_f
-
+    return EXITO;
 }
-
