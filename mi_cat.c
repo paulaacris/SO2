@@ -9,7 +9,7 @@
 
 #include "directorios.h"
 
-#define TAMBUFFER 1500
+#define TAMBUFFER_MI_CAT 1500
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
@@ -38,13 +38,13 @@ int main(int argc, char *argv[]) {
         return FALLO;
     }
 
-    unsigned char buffer[TAMBUFFER];
+    unsigned char buffer[TAMBUFFER_MI_CAT];
     unsigned int offset = 0;
     int leidos = 0;
     unsigned int total_leidos = 0;
 
     // Leemos en bloques de TAMBUFFER hasta que no haya más datos
-    while ((leidos = mi_read(ruta, buffer, offset, TAMBUFFER)) > 0) {
+    while ((leidos = mi_read(ruta, buffer, offset, TAMBUFFER_MI_CAT)) > 0) {
         if (write(1, buffer, leidos) != leidos) {
             perror(RED "Error al escribir en la salida estándar" RESET);
             bumount();
