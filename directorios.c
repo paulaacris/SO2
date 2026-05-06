@@ -777,6 +777,121 @@ int mi_unlink(const char *camino) {
     }
 
     return EXITO;
+}
 
+/*  
+ *  Renombra un fichero o directorio
+ *  @param camino_antiguo ruta del fichero / directorio que queremso renombrar
+ *  @param camino_nuevo nombre nuevo que le queremos poner
+ *  @return 
+ */
+int mi_rn(const char *camino_antiguo, const char *nuevo) {
+    unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
+    int err;
 
+    int len_nuevo = strlen(nuevo);
+
+    // copiamos el nombre nuevo (nuevo) en la variable
+    char nombre_nuevo[TAMNOMBRE];
+    memset(nombre_nuevo, 0, TAMNOMBRE);
+    strcpy(nombre_nuevo, nuevo);
+    
+    // buscamso el antiguo 
+    if ((err = buscar_entrada(camino_antiguo, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0)) < 0) return err; 
+    
+    // leemos el directorio padre del que queremos cambiar 
+    inodo_t inodo_dir;
+    if (leer_inodo(p_inodo_dir, &inodo_dir) < 0) return FALLO;
+
+    // comprobamos que no exista ya /ruta/nuevo
+    int cant_entradas = inodo_dir.tamEnBytesLog / sizeof(struct entrada);
+    struct entrada entrada_act;
+
+    // vamos leyendo las entradas una por una 
+    for (int i = 0; i < cant_entradas; i++) {
+        if (mi_read_f(p_inodo_dir, &entrada_act, i * sizeof(struct entrada), sizeof(struct entrada)) < 0) return FALLO;
+        if (strcmp(entrada_act.nombre, nombre_nuevo) == 0) { 
+            return -7; // mostrar_error_buscar_entrada() - El archivo ya existe
+        }
+    }
+    
+    // leemos la entrada original 
+    if (mi_read_f(p_inodo_dir, &entrada_act, p_entrada * sizeof(struct entrada), sizeof(struct entrada)) < 0) return FALLO;
+
+    // cambiamos el nombre por el nuevo 
+    strcpy(entrada_act.nombre, nombre_nuevo);
+
+    // Escribimos la entrada actualizada en su misma posición
+    if (mi_write_f(p_inodo_dir, &entrada_act, p_entrada * sizeof(struct entrada), sizeof(struct entrada)) < 0) return FALLO;
+
+    return EXITO;
+}
+
+/*  
+ *  Borra recursivamente el contenido de un directorio y el propio directorio
+ *  @param ruta ruta del directorio que queremso vaciar y borrar
+ *  @return 
+ */
+int mi_rm_r(const char *ruta) {
+    unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
+    int err;
+
+    // buscamos la ruta actual 
+    if ((err = buscar_entrada(ruta, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0)) < 0) return err;
+
+    inodo_t inodo;
+    if (leer_inodo(p_inodo, &inodo) == FALLO) return FALLO;
+
+    // si es un fichero lo borramos
+    if (inodo.tipo == 'f') {
+        return mi_unlink(ruta);
+    }
+
+    // si es un directorio leemos sus entradas 
+    else if (inodo.tipo == 'd') {
+        int cant_entradas = inodo.tamEnBytesLog / sizeof(struct entrada);
+        
+        if (cant_entradas > 0) {
+            struct entrada buffer_entradas[BLOCKSIZE / sizeof(struct entrada)];
+            memset(buffer_entradas, 0, BLOCKSIZE);
+            
+            int entradas_leidas = 0;
+            while (entradas_leidas < cant_entradas) {
+                // leemos el directorio 
+                if (mi_read_f(p_inodo, buffer_entradas, entradas_leidas * sizeof(struct entrada), BLOCKSIZE) == FALLO) return FALLO;
+                
+                // si las entradas que nos quedan por leer son mas de un bloque entero leemos el bloque enteor si no solo leemos las entradas que nos quedan (que no ocupan un bloque completo)
+                int limite = (cant_entradas - entradas_leidas < (BLOCKSIZE / sizeof(struct entrada))) ? 
+                             (cant_entradas - entradas_leidas) : (BLOCKSIZE / sizeof(struct entrada));
+                
+                for (int i = 0; i < limite; i++) {
+                    char nueva_ruta[TAMNOMBRE * PROFUNDIDAD]; // tamaño máximo de ruta
+                    // ruta nueva = "ruta antigua + entrada"
+                    strcpy(nueva_ruta, ruta);
+                    strcat(nueva_ruta, buffer_entradas[i].nombre);
+                    
+                    // Si es un subdirectorio, añadimos la barra final
+                    inodo_t sub_inodo;
+                    leer_inodo(buffer_entradas[i].ninodo, &sub_inodo);
+                    if (sub_inodo.tipo == 'd') strcat(nueva_ruta, "/");
+                    
+                    // Llamada recursiva
+                    mi_rm_r(nueva_ruta);
+                }
+
+                entradas_leidas += limite;
+            }
+        }
+        // Una vez vacío el directorio (no tiene mas entradas) borramos el directorio actual
+        int err = mi_unlink(ruta);
+        if (err < 0) {
+            mostrar_error_buscar_entrada(err);
+            bumount();
+            return FALLO;
+        }
+
+        return err;
+    }
+
+    return FALLO;
 }

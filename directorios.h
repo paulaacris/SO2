@@ -36,3 +36,5 @@ int mi_write(const char *camino, const void *buf_original, unsigned int offset, 
 int mi_read(const char *camino, void *buf_original, unsigned int offset, unsigned int nbytes);
 int mi_link(const char *camino1, const char *camino2);
 int mi_unlink(const char *camino);
+int mi_rn(const char *camino_antiguo, const char *nuevo);
+int mi_rm_r(const char *ruta);
