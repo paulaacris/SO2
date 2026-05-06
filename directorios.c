@@ -10,7 +10,7 @@
 // 1: última L/E  (1 entrada para escritura + 1 para lectura)
 // 2: tabla FIFO  (CACHE_SIZE entradas para escritura + CACHE_SIZE para lectura)
 // 3: tabla LRU   (sello de tiempo)
-#define USARCACHE 2
+#define USARCACHE 3
  
 #if USARCACHE
     struct UltimaEntrada {
@@ -469,7 +469,7 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
                 p_inodo   = UltimasEntradasEscritura[i].p_inodo; // copiamos el numero de inodo
                 cache_hit = 1; // marcamos que lo hemos encontrado
                 #if DEBUG_mi_write
-                    fprintf(stderr, CYAN "[mi_write() -> Utilizamos la caché de escritura en vez de llamar a buscar_entrada()]\n" RESET);
+                    fprintf(stderr, CYAN "[mi_write() -> Utilizamos cache[%d]: %s]\n" RESET, i, camino);
                 #endif
                 break;
             }
@@ -484,7 +484,7 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
                 // Actualizamos el sello de tiempo del hit a la hora actual
                 gettimeofday(&UltimasEntradasEscritura[i].ultima_consulta, NULL);
                 #if DEBUG_mi_write
-                    fprintf(stderr, CYAN "[mi_write() -> Utilizamos la caché de escritura en vez de llamar a buscar_entrada()]\n" RESET);
+                    fprintf(stderr, CYAN "[mi_write() -> Utilizamos cache[%d]: %s]\n" RESET, i, camino);
                 #endif
                 break;
             }
@@ -512,7 +512,7 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
             UltimasEntradasEscritura[IdxInsercionEscritura].p_inodo = p_inodo;
             if (EntradasEscritura < CACHE_SIZE) EntradasEscritura++;
             #if DEBUG_mi_write
-                fprintf(stderr, YELLOW "[mi_write() -> Actualizamos la caché de escritura]\n" RESET);
+                fprintf(stderr, YELLOW "[mi_write() -> Reemplazamos cache[%d]: %s]\n" RESET, IdxInsercionEscritura, camino);
             #endif
     
     #elif USARCACHE == 3
@@ -535,7 +535,7 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
         // con el tiempo actual
         gettimeofday(&UltimasEntradasEscritura[lru_idx].ultima_consulta, NULL);
         #if DEBUG_mi_write
-            fprintf(stderr, YELLOW "[mi_write() -> Actualizamos la caché de escritura]\n" RESET);
+            fprintf(stderr, YELLOW "[mi_write() -> Reemplazamos cache[%d]: %s]\n" RESET, lru_idx, camino);
         #endif
     #endif
     }
@@ -576,7 +576,7 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
                 p_inodo   = UltimasEntradasLectura[i].p_inodo;
                 cache_hit = 1;
                 #if DEBUG_mi_read
-                    fprintf(stderr, CYAN "\n[mi_read() -> Utilizamos la caché de lectura en vez de llamar a buscar_entrada()]\n" RESET);
+                    fprintf(stderr, CYAN "[mi_read() -> Utilizamos cache[%d]: %s]\n" RESET, i, camino);
                 #endif
                 break;
             }
@@ -590,7 +590,7 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
                 cache_hit = 1;
                 gettimeofday(&UltimasEntradasLectura[i].ultima_consulta, NULL);
                 #if DEBUG_mi_read
-                    fprintf(stderr, CYAN "\n[mi_read() -> Utilizamos la caché de lectura en vez de llamar a buscar_entrada()]\n" RESET);
+                    fprintf(stderr, CYAN "[mi_read() -> Utilizamos cache[%d]: %s]\n" RESET, i, camino);
                 #endif
                 break;
             }
@@ -615,7 +615,7 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
         UltimasEntradasLectura[IdxInsercionLectura].p_inodo = p_inodo;
         if (EntradasLectura < CACHE_SIZE) EntradasLectura++;
         #if DEBUG_mi_read
-            fprintf(stderr, YELLOW "[mi_read() -> Actualizamos la caché de lectura]\n" RESET);
+            fprintf(stderr, YELLOW "[mi_read() -> Reemplazamos cache[%d]: %s]\n" RESET, IdxInsercionLectura, camino);
         #endif
     
     #elif USARCACHE == 3
@@ -635,7 +635,7 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
         UltimasEntradasLectura[lru_idx].p_inodo = p_inodo;
         gettimeofday(&UltimasEntradasLectura[lru_idx].ultima_consulta, NULL);
         #if DEBUG_mi_read
-            fprintf(stderr, YELLOW "[mi_read() -> Actualizamos la caché de lectura]\n" RESET);
+            fprintf(stderr, YELLOW "[mi_read() -> Reemplazamos cache[%d]: %s]\n" RESET, lru_idx, camino);
         #endif
     #endif
     }
@@ -788,8 +788,6 @@ int mi_unlink(const char *camino) {
 int mi_rn(const char *camino_antiguo, const char *nuevo) {
     unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
     int err;
-
-    int len_nuevo = strlen(nuevo);
 
     // copiamos el nombre nuevo (nuevo) en la variable
     char nombre_nuevo[TAMNOMBRE];
