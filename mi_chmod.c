@@ -3,10 +3,8 @@
  * @author Paula Cristina Morro Negre
  * @author Maria Teresa Sbert Gomila
  *
- * Sintaxis: ./mi_chmod <disco> <permisos> </ruta>
  * Cambia los permisos de un fichero o directorio.
- * Permisos en octal: 4=r--, 2=-w-, 1=--x, combinaciones hasta 7=rwx.
- */
+*/
 
 #include "directorios.h"
 
@@ -40,5 +38,6 @@ int main(int argc, char *argv[]) {
 
     // desmontamos el dispositivo
     if (bmount(disco) == FALLO) return FALLO;
+    
     return EXITO;
 }

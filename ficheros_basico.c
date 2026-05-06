@@ -88,10 +88,7 @@ int initMB() {
     unsigned char bufferMB[BLOCKSIZE]; // cada posicion del buffer es un byte
 
     // leemos el SB
-    if (bread(posSB, &SB) == FALLO) {
-        fprintf(stderr, RED "Error al leer el SuperBloque en initMB\n"RESET);
-        return FALLO;
-    }
+    if (bread(posSB, &SB) == FALLO) return FALLO;
 
     // bloques que ocupan los metadatos
     int tamMetadatos = tamSB + tamMB(SB.totBloques) + tamAI(SB.totInodos);

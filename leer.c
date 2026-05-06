@@ -21,10 +21,7 @@ int main(int argc, char *argv[]) {
     int ninodo = atoi(argv[2]);
 
     // Montamos el dispositivo
-    if (bmount(nombre_dispositivo) == FALLO){
-        perror(RED "Error al montar el dispositivo\n" RESET);
-        return FALLO;  
-    }
+    if (bmount(nombre_dispositivo) == FALLO) return FALLO;  
     
     // Creamos un buffer para almacenar los datos leídos y variables para controlar la lectura
     unsigned char buffer[TAM_BUFFER];
@@ -58,7 +55,7 @@ int main(int argc, char *argv[]) {
     // Mostramos stat para ver que el tamaño coincide
     struct STAT stat;
     if (mi_stat_f(ninodo, &stat) == FALLO) {
-        printf("AQUI");
+        bumount();
         return FALLO;
     }
 

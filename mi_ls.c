@@ -3,12 +3,8 @@
  * @author Paula Cristina Morro Negre
  * @author Maria Teresa Sbert Gomila
  *
- * Sintaxis: ./mi_ls <disco> </ruta>
- *           ./mi_ls -l <disco> </ruta>    (version extendida)
- *
- * Lista el contenido de un directorio (o muestra los datos de un fichero).
- * La ruta acaba en '/' si es directorio, sin '/' si es fichero.
- */
+ * Lista el contenido de un directorio o muestra los datos de un fichero
+*/
 
 #include "directorios.h"
 
@@ -74,5 +70,6 @@ int main(int argc, char *argv[]) {
     }
 
     if (bumount() == FALLO) return FALLO;
+
     return EXITO;
 }

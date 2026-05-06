@@ -2,10 +2,9 @@
  * @file mi_cat.c
  * @author Paula Cristina Morro Negre
  * @author Maria Teresa Sbert Gomila
- *
- * Sintaxis: ./mi_cat <disco> </ruta_fichero>
+ * 
  * Muestra todo el contenido de un fichero.
- */
+*/
 
 #include "directorios.h"
 
@@ -61,7 +60,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (total_leidos != stat.tamEnBytesLog) {
-        fprintf(stderr, RED "Advertencia: bytes leídos (%u) no coinciden con tamEnBytesLog (%u).\n" RESET, total_leidos, stat.tamEnBytesLog);
+        fprintf(stderr, RED "bytes leídos (%u) no coinciden con tamEnBytesLog (%u).\n" RESET, total_leidos, stat.tamEnBytesLog);
     }
 
     fprintf(stderr, "\nTotal_leidos %u\n", total_leidos);

@@ -6,6 +6,40 @@
 
 #include "directorios.h"
 
+// 0: sin caché
+// 1: última L/E  (1 entrada para escritura + 1 para lectura)
+// 2: tabla FIFO  (CACHE_SIZE entradas para escritura + CACHE_SIZE para lectura)
+// 3: tabla LRU   (sello de tiempo)
+#define USARCACHE 2
+ 
+#if USARCACHE
+    struct UltimaEntrada {
+        char camino[TAMNOMBRE * PROFUNDIDAD];
+        int  p_inodo;
+        #if USARCACHE == 3
+        struct timeval ultima_consulta;
+        #endif
+    };
+    
+    #if USARCACHE == 1
+        // creamos variables para una sola entrada
+        static struct UltimaEntrada UltimaEntradaEscritura;
+        static struct UltimaEntrada UltimaEntradaLectura;
+    #else
+        #define CACHE_SIZE 3
+        // podemos guardar hasta tres rutas 
+        static struct UltimaEntrada UltimasEntradasEscritura[CACHE_SIZE];
+        static struct UltimaEntrada UltimasEntradasLectura[CACHE_SIZE];
+    #endif
+#endif
+ 
+#if USARCACHE == 2
+    static int IdxInsercionEscritura = CACHE_SIZE - 1; // para saber es que posición nos toca escribir
+    static int IdxInsercionLectura = CACHE_SIZE - 1;
+    static int EntradasEscritura = 0; // cuántas posiciones están ya ocupadas
+    static int EntradasLectura = 0;
+#endif
+
 /*
  *  Divide el camino en la parte inicial y en la parte final y da el tipo de inicial
  *  @param camino ruta de directorios para llegar al fichero/directorio indicado
@@ -401,40 +435,6 @@ int mi_stat(const char *camino, struct STAT *p_stat) {
     return mi_stat_f(p_inodo, p_stat); // devolvemos lo que devuelva mi_stst_f
 }
 
-// 0: sin caché
-// 1: última L/E  (1 entrada para escritura + 1 para lectura)
-// 2: tabla FIFO  (CACHE_SIZE entradas para escritura + CACHE_SIZE para lectura)
-// 3: tabla LRU   (sello de tiempo)
-#define USARCACHE 2
- 
-#if USARCACHE
-    struct UltimaEntrada {
-        char camino[TAMNOMBRE * PROFUNDIDAD];
-        int  p_inodo;
-        #if USARCACHE == 3
-        struct timeval ultima_consulta;
-        #endif
-    };
-    
-    #if USARCACHE == 1
-        // creamos variables para una sola entrada
-        static struct UltimaEntrada UltimaEntradaEscritura;
-        static struct UltimaEntrada UltimaEntradaLectura;
-    #else
-        #define CACHE_SIZE 3
-        // podemos guardar hasta tres rutas 
-        static struct UltimaEntrada UltimasEntradasEscritura[CACHE_SIZE];
-        static struct UltimaEntrada UltimasEntradasLectura[CACHE_SIZE];
-    #endif
-#endif
- 
-#if USARCACHE == 2
-    static int IdxInsercionEscritura = CACHE_SIZE - 1; // para saber es que posición nos toca escribir
-    static int IdxInsercionLectura = CACHE_SIZE - 1;
-    static int EntradasEscritura = 0; // cuántas posiciones están ya ocupadas
-    static int EntradasLectura = 0;
-#endif
-
 /*  
  *  Escribe nbytes de buf en el fichero indicado por camino a partir de offset.
  *  @param camino ruta del fichero/directorio
@@ -641,4 +641,142 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
     }
  
     return mi_read_f(p_inodo, buf, offset, nbytes);
+}
+
+/*  
+ *  Crea el enlace de una entrada de directorio camino2 al inodo especificado por otra entrada de directorio camino1
+ *  @param camino1
+ *  @param camino2
+ *  @return 
+ */
+int mi_link(const char *camino1, const char *camino2) {
+    // leemos el superbloque 
+    struct superbloque SB;
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+    
+    unsigned int p_inodo_dir1 = SB.posInodoRaiz, p_inodo1, p_entrada1;
+    unsigned int p_inodo_dir2 = SB.posInodoRaiz, p_inodo2, p_entrada2;
+    int err;
+
+    // comprobamso que la entrada camino1 exista y tenga permisos de lectura 
+    if ((err = buscar_entrada(camino1, &p_inodo_dir1, &p_inodo1, &p_entrada1, 0, 0)) < 0) return err;
+    
+    // camino1 y camino2 han de referirse a un fichero
+    if ((camino1[strlen(camino1) - 1] == '/') || (camino2[strlen(camino2) - 1] == '/')) {
+        fprintf(stderr, RED "La ruta de los ficheros no puede ser un directorio\n" RESET);
+        return FALLO;
+    }
+
+    // camino2 no tiene que existir
+    // la creamos con buscar_entrada() con permisos 6 y reservar=1
+    if ((err = buscar_entrada(camino2, &p_inodo_dir2, &p_inodo2, &p_entrada2, 1, 6)) < 0) return err;
+    
+    // leer el inodo asociado a camino2
+    inodo_t inodo2;
+    if (leer_inodo(p_inodo2, &inodo2) == FALLO) return FALLO;
+
+    // Leemos la entrada creada correspondiente a camino2, o sea la entrada p_entrada2 de p_inodo_dir2
+    struct entrada entrada2;
+    if (mi_read_f(p_inodo_dir2, &entrada2, p_entrada2 * sizeof(struct entrada), sizeof(struct entrada)) == FALLO) return FALLO;
+    
+    // Creamos el enlace: Asociamos a esta entrada el mismo inodo que el asociado a la entrada de camino1, es decir p_inodo1
+    entrada2.ninodo = p_inodo1;
+
+    // Escribimos la entrada modificada en p_inodo_dir2
+    if (mi_write_f(p_inodo_dir2, &entrada2, p_entrada2 * sizeof(struct entrada), sizeof(struct entrada)) == FALLO) return FALLO;
+    
+    // Liberamos el inodo que se ha asociado a la entrada creada, p_inodo2
+    if (liberar_inodo(p_inodo2) == FALLO) return FALLO;
+    
+    // Incrementamos la cantidad de enlaces (nlinks) de p_inodo1, actualizamos el ctime y lo salvamos
+    inodo_t inodo1;
+    if (leer_inodo(p_inodo1, &inodo1) == FALLO) return FALLO;
+    
+    inodo1.nlinks++;
+    inodo1.ctime = time(NULL);
+
+    if (escribir_inodo(p_inodo1, &inodo1) < 0) {
+        return FALLO;
+    }
+
+    return EXITO;
+}
+
+/*  
+ *  Borra la entrada de directorio especificada y, si es el último enlace, borra el fichero/directorio
+ *  @param camino
+ *  @return 
+ */
+int mi_unlink(const char *camino) {
+    // leemos el superbloque 
+    struct superbloque SB;
+    if (bread(posSB, &SB) == FALLO) return FALLO;
+
+    unsigned int p_inodo_dir = SB.posInodoRaiz, p_inodo = 0, p_entrada = 0;
+    int err;
+
+    // Hay que comprobar que la entrada camino exista
+    if ((err = buscar_entrada(camino, &p_inodo_dir, &p_inodo, &p_entrada, 0, 0)) < 0) return err;
+    
+    // leer el inodo
+    inodo_t inodo;
+    if (leer_inodo(p_inodo, &inodo) == FALLO) return FALLO;
+
+    // Si es directorio y no está vacío, entonces no se puede borrar
+    if (inodo.tipo == 'd' && inodo.tamEnBytesLog > 0) {
+        fprintf(stderr, RED "Error: El directorio %s no está vacío\n" RESET, camino);
+        return FALLO;
+    }
+    
+    // leemos el inodo asociado al directorio que contiene la entrada que queremos eliminar (p_inodo_dir)
+    inodo_t inodo_dir;
+    if (leer_inodo(p_inodo_dir, &inodo_dir) == FALLO) return FALLO;
+
+    // obtenemos el nº de entradas que tiene
+    int num_entradas = inodo_dir.tamEnBytesLog / sizeof(struct entrada);
+
+    struct entrada buffer_entradas[BLOCKSIZE / sizeof(struct entrada)];
+
+    // si la entrada a eliminar no es la ultima 
+    if (p_entrada != (num_entradas - 1)) {
+        // Leer la última y escribirla en la posición (bloque) de la entrada que queremos eliminar
+        int pos_ult_entrada = ((num_entradas - 1) * sizeof(struct entrada)) / BLOCKSIZE;
+        memset(buffer_entradas, 0, BLOCKSIZE);
+        
+        // Leemos el bloque donde se encuentra última entrada
+        if (mi_read_f(p_inodo_dir, buffer_entradas, pos_ult_entrada * BLOCKSIZE, BLOCKSIZE) == FALLO) return FALLO;
+        
+        // La extraemos del bloque leído
+        struct entrada ultima_entrada = buffer_entradas[(num_entradas - 1) % (BLOCKSIZE / sizeof(struct entrada))];
+
+        // Bloque lógico donde se encuentra la entrada a eliminar
+        int pos_entrada_elim = (p_entrada * sizeof(struct entrada)) / BLOCKSIZE;
+        memset(buffer_entradas, 0, BLOCKSIZE);
+
+        // Leemos bloque donde se encuentra
+        mi_read_f(p_inodo_dir, buffer_entradas, pos_entrada_elim * BLOCKSIZE, BLOCKSIZE);
+
+        // Sobrescribimos la entrada a eliminar con la última entrada
+        buffer_entradas[p_entrada % (BLOCKSIZE / sizeof(struct entrada))] = ultima_entrada;
+        mi_write_f(p_inodo_dir, buffer_entradas, pos_entrada_elim * BLOCKSIZE, BLOCKSIZE);
+    }
+
+    // si la entrada a eliminar es la ultima truncamos el inodo a su tamaño menos el tamaño de una entrada
+    int nbytes = inodo_dir.tamEnBytesLog - sizeof(struct entrada);
+    if (mi_truncar_f(p_inodo_dir, nbytes) == FALLO) return FALLO;
+
+    //Decrementar el número de enlaces de p_inodo
+    inodo.nlinks--;
+
+    //Si no quedan enlaces, entonces liberamos el inodo
+    if (inodo.nlinks == 0) {
+        if (liberar_inodo(p_inodo) == FALLO) return FALLO;
+    } else {  // en caso contrario actualizamos su ctime y escribimos el inodo.
+        inodo.ctime = time(NULL);
+        if (escribir_inodo(p_inodo, &inodo) == FALLO) return FALLO;
+    }
+
+    return EXITO;
+
+
 }

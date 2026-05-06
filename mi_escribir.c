@@ -3,9 +3,8 @@
  * @author Paula Cristina Morro Negre
  * @author Maria Teresa Sbert Gomila
  *
- * Sintaxis: ./mi_escribir <disco> </ruta_fichero> <texto> <offset>
  * Escribe texto en un fichero desde el offset indicado.
- */
+*/
 
 #include "directorios.h"
 
@@ -47,5 +46,6 @@ int main(int argc, char *argv[]) {
 
     // desmontamos el dispositivo
     if (bumount() == FALLO) return FALLO;
+    
     return EXITO;
 }
