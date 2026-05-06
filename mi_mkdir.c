@@ -3,8 +3,7 @@
  * @author Paula Cristina Morro Negre
  * @author Maria Teresa Sbert Gomila
  *
- * Sintaxis: ./mi_mkdir <disco> <permisos> </ruta_directorio/>
- * Crea un directorio. La ruta debe acabar en '/' para indicar que es un directorio.
+ * Crea un directorio.
  */
 
 #include "directorios.h"
@@ -37,7 +36,7 @@ int main(int argc, char *argv[]) {
 
     if ((err = mi_creat(ruta, permisos)) < 0) {
         mostrar_error_buscar_entrada(err);
-        if (bmount(disco) == FALLO) return FALLO;
+        bumount();
         return FALLO;
     }
 

@@ -33,9 +33,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Desmontamos el dispositivo
-    if (bumount() == FALLO) {
-        return FALLO;
-    }
+    if (bumount() == FALLO) return FALLO;
 
     return EXITO;
 }

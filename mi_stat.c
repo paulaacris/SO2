@@ -20,11 +20,8 @@ int main(int argc, char *argv[]) {
     const char *ruta  = argv[2];
 
     // montamos el dispositivo
-    if (bmount(disco) == FALLO) {
-        fprintf(stderr, RED "Error: no se pudo montar el dispositivo '%s'\n" RESET, disco);
-        return FALLO;
-    }
-
+    if (bmount(disco) == FALLO) return FALLO;
+ 
     // obtenemos los metadatos del inodo
     struct STAT stat;
     int error = mi_stat(ruta, &stat);
@@ -67,5 +64,6 @@ int main(int argc, char *argv[]) {
     printf("numBloquesOcupados: %u\n", stat.numBloquesOcupados);
 
     if (bmount(disco) == FALLO) return FALLO;
+    
     return EXITO;
 }

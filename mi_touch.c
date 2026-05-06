@@ -40,11 +40,12 @@ int main(int argc, char *argv[]) {
     int error = mi_creat(ruta, (unsigned char)permisos_int);
     if (error != EXITO) {
         mostrar_error_buscar_entrada(error);
-        if (bumount(disco) == FALLO) return FALLO;
+        bumount(disco);
         return FALLO;
     }
 
     // desmontamos el dispositivo
     if (bumount(disco) == FALLO) return FALLO;
+    
     return EXITO;
 }
