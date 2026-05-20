@@ -35,8 +35,11 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
     // CASO 1: ESCRIBIMOS EN UN SOLO BLOQUE 
     if (primerBL == ultimoBL) {   
+        mi_waitSem();
         // obtenemos el bloque fisico correspondiente al bloque logico primerBL
         nbfisico = traducir_bloque_inodo(ninodo, primerBL, 1);
+        mi_signalSem();
+        
         if (nbfisico == FALLO) return FALLO;
         
         // leemos ese bloque fisico 
@@ -53,8 +56,11 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
     // CASO 2: ESCRIBIMOS EN MAS DE UN BLOQUE
     else {
+        mi_waitSem();
         // obtenemos el bloque fisico correspondiente al bloque logico primerBL
         nbfisico = traducir_bloque_inodo(ninodo, primerBL, 1);
+        mi_signalSem();
+        
         if (nbfisico == FALLO) return FALLO;
         
         // PRIMER BLOQUE 
@@ -68,8 +74,11 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
 
         // BLOQUES INTERMEDIOS 
         for (int bl = primerBL + 1; bl < ultimoBL; bl ++) {
+            mi_waitSem();
             // traducimos el blque 
             nbfisico = traducir_bloque_inodo(ninodo, bl, 1);
+            mi_signalSem();
+
             if (nbfisico == FALLO) return FALLO;
             
             // sobreescibimos todo el bloque 
@@ -78,8 +87,10 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
             bytes_escritos += BLOCKSIZE;
         }
 
+        mi_waitSem();
         // ULTIMO BLOQUE
         nbfisico = traducir_bloque_inodo(ninodo, ultimoBL, 1);
+        mi_signalSem();
 
         if (bread(nbfisico, buf_bloque) == FALLO) return bytes_escritos;
        
@@ -90,6 +101,7 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
         bytes_escritos += (desp2 + 1);
     } 
 
+    mi_waitSem();
     // leemos porque en traducir se modifica el inodo, si no no lo tenemos actualizado 
     leer_inodo(ninodo, &inodo);
     // actualizamos el inodo 
@@ -100,6 +112,8 @@ int mi_write_f(unsigned int ninodo, const void *buf_original, unsigned int offse
     inodo.mtime = time(NULL); // porque modificamos los datos siempre 
 
     if (escribir_inodo(ninodo, &inodo) == FALLO) return FALLO;
+
+    mi_signalSem();
     
     return bytes_escritos;
 }
@@ -117,12 +131,30 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
     unsigned char buf_bloque[BLOCKSIZE];
     int nbfisico = 0, bytes_leidos = 0;
 
+    mi_waitSem();
+
     // leer el inodo
-    if (leer_inodo(ninodo, &inodo) == FALLO) return FALLO;
+    if (leer_inodo(ninodo, &inodo) == FALLO) {
+        mi_signalSem();
+        return FALLO;
+    }
     
     // comprobamos que tenga los permisos necesarios
     // el tercer bit tiene que estar a 1 (100, 101, 110, 111)
-    if ((inodo.permisos & PERMISO_LECTURA) != PERMISO_LECTURA) return FALLO;
+    if ((inodo.permisos & PERMISO_LECTURA) != PERMISO_LECTURA) {
+        mi_signalSem();
+        return FALLO;
+    }
+
+    // actualizamos el inodo 
+    inodo.atime = time(NULL);
+
+    if (escribir_inodo(ninodo, &inodo) == FALLO) {
+        mi_signalSem();
+        return FALLO;
+    }
+
+    mi_signalSem();
 
     if (offset >= inodo.tamEnBytesLog) {
         return bytes_leidos;
@@ -180,11 +212,6 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
         }
         bytes_leidos += (desp2 + 1);
     } 
-
-    // actualizamos el inodo 
-    inodo.atime = time(NULL);
-
-    if (escribir_inodo(ninodo, &inodo) == FALLO) return FALLO;
     
     return bytes_leidos;
 }
@@ -226,6 +253,8 @@ int mi_stat_f(unsigned int ninodo, struct STAT *p_stat) {
  *  @return cantidad de bytes leidos realmente
  */
 int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
+    mi_waitSem();
+    
     inodo_t inodo;
 
     // leer el inodo
@@ -236,6 +265,8 @@ int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
 
     // guardamos los cmabios 
     if (escribir_inodo(ninodo, &inodo) == FALLO) return FALLO;
+
+    mi_signalSem();
 
     return EXITO;
 }
