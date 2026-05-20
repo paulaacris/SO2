@@ -5,11 +5,14 @@
 */
 
 #include "bloques.h"
+#include "semaforo_mutex_posix.h" 
 
 static int descriptor = 0;
+static sem_t *mutex; // variable global para el semáforo 
+static unsigned int inside_sc = 0; // para controlar que no hagamos wait 2 veces (código reentrante) 
 
 /*
- *  "monta" el dispositivo virtual 
+ *  "monta" el dispositivo virtual y arranca el semaforo
  *  @param camino direccion del dispositivo virtual
  *  @return descriptor del fichero o -1 en caso de error
  */
@@ -20,17 +23,27 @@ int bmount(const char *camino){
     if (descriptor == FALLO) {
         fprintf(stderr, RED"Error al abrir el fichero en bmount\n"RESET);
     }
-    
+
+    if (!mutex) { // el semáforo es único en el sistema y sólo se ha de inicializar 1 vez (padre)
+       mutex = initSem(); 
+       if (mutex == SEM_FAILED) {
+           return -1;
+       }
+   }
+
     return descriptor;
 }
 
 /*
- *  "cierra" el dispositivo virtual 
+ *  "cierra" el dispositivo virtual y elimina el semáforo
  *  @return descriptor del fichero o -1 en caso de error
  */
 int bumount() {
     // cerramos el fichero 
     descriptor = close(descriptor);
+
+    // eliminamos el semáforo 
+    deleteSem(mutex);
 
     if (descriptor == FALLO) {
         fprintf(stderr, RED"Error al cerrar el fichero en bumount\n"RESET);
@@ -70,4 +83,19 @@ int bread(unsigned int nbloque, void *buf) {
     if (read(descriptor, buf, BLOCKSIZE) == FALLO) return FALLO;   
 
     return BLOCKSIZE;
+}
+
+void mi_waitSem() {
+   if (!inside_sc) { // inside_sc==0, no se ha hecho ya un wait
+       waitSem(mutex);
+   }
+   inside_sc++;
+}
+
+
+void mi_signalSem() {
+   inside_sc--;
+   if (!inside_sc) {
+       signalSem(mutex);
+   }
 }
