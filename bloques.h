@@ -22,8 +22,9 @@
 #define DEBUG_traducir_bloque_inodo 0
 #define DEBUG_liberar_inodo 0
 #define DEBUG_buscar_entrada 0
-#define DEBUG_mi_write 1
-#define DEBUG_mi_read 1
+#define DEBUG_mi_write 0
+#define DEBUG_mi_read 0
+#define DEBUG_simulacion 1
 
 #define BLACK      "\x1B[30m"
 #define RED           "\x1b[31m"

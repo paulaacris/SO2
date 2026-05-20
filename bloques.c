@@ -17,18 +17,24 @@ static unsigned int inside_sc = 0; // para controlar que no hagamos wait 2 veces
  *  @return descriptor del fichero o -1 en caso de error
  */
 int bmount(const char *camino){
+    // si ya hay un descriptor abierto lo cerramos
+    if (descriptor > 0) {
+        close(descriptor);
+    }
+    
     // creamos/abrimos el fichero con los permisos O_RDWR | O_CREAT
     descriptor = open(camino, O_RDWR | O_CREAT, 0666);
 
     if (descriptor == FALLO) {
         fprintf(stderr, RED"Error al abrir el fichero en bmount\n"RESET);
+        return FALLO;
     }
 
     if (!mutex) { // el semáforo es único en el sistema y sólo se ha de inicializar 1 vez (padre)
-       mutex = initSem(); 
-       if (mutex == SEM_FAILED) {
-           return -1;
-       }
+        mutex = initSem(); 
+        if (mutex == SEM_FAILED) {
+           return FALLO;
+        }
    }
 
     return descriptor;

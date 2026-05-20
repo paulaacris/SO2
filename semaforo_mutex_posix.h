@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <stdio.h>
 #include <fcntl.h>
 #include <semaphore.h>
 

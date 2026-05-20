@@ -9,8 +9,8 @@ sem_t *initSem() {
 
    sem = sem_open(SEM_NAME, O_CREAT, S_IRWXU, SEM_INIT_VALUE);
    if (sem == SEM_FAILED) {
-       perror("Error sem_open()");
-       return NULL;
+      perror("Error sem_open()");
+      return NULL;
    }
    return sem;
 }
@@ -24,7 +24,7 @@ sem_t *initSem() {
 void deleteSem(sem_t *sem) {
    //printf("Closing sem in address: %p\n", (void *)sem);
    if (sem_close(sem) == -1) {
-       perror("Error deleteSem()");
+      perror("Error deleteSem()");
    }
 }
 
