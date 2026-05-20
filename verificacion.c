@@ -14,6 +14,8 @@ int main(int argc, char **argv) {
 
     char *camino_simul = argv[2];
 
+    printf("dir_sim: %s\n", camino_simul);
+
     // sacamos la info del directorio de simulacion para saber cuanto ocupa
     struct STAT stat;
     if (mi_stat(camino_simul, &stat) < 0) {
@@ -24,6 +26,8 @@ int main(int argc, char **argv) {
 
     // numeor de entradas que hay en el directorio de simulacion
     int num_entradas = stat.tamEnBytesLog / sizeof(struct entrada);
+    printf("numentradas: %d NUMPROCESOS: %d\n", num_entradas, NUMPROCESOS);
+
     if (num_entradas != NUMPROCESOS) { // si no hay las mismas entradas que el NUMPROCESOS es que algo ha ido mal
         fprintf(stderr, RED "Error: El número de entradas (%d) no coincide con NUMPROCESOS (%d).\n" RESET, num_entradas, NUMPROCESOS);
         bumount();
