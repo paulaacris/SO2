@@ -1,8 +1,8 @@
 #include "simulacion.h"
 
-int acabados = 0; // Variable global para llevar la cuenta de procesos terminados
+int acabados = 0; // para llevar la cuenta de procesos terminados
 
-// Función enterrador
+// Función enterrador - se la llama cada vez que un hijo muere 
 void reaper(){
     pid_t ended;
     signal(SIGCHLD, reaper);
@@ -26,14 +26,14 @@ int main(int argc, char **argv) {
         return FALLO;
     }
 
-    // Crear el directorio de simulación: /simul_aaaammddhhmmss/
-    char camino_simul[100];
-    time_t t = time(NULL);
+    // Crear el directorio de simulación /simul_aaaammddhhmmss/
+    char camino_simul[100]; // donde guardaremos el nombre de la carpeta
+    time_t t = time(NULL); // obtenemos la hora actual
     struct tm *tm = localtime(&t);
     sprintf(camino_simul, "/simul_%04d%02d%02d%02d%02d%02d/",
             tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
             tm->tm_hour, tm->tm_min, tm->tm_sec);
-
+    // creamos el directorio simul
     if (mi_creat(camino_simul, 6) < 0) {
         fprintf(stderr, RED "Error al crear el directorio de simulación.\n" RESET);
         bumount();
@@ -42,18 +42,18 @@ int main(int argc, char **argv) {
 
     printf(YELLOW "*** SIMULACIÓN DE %d PROCESOS REALIZANDO CADA UNO %d ESCRITURAS ***\n" RESET, NUMPROCESOS, NUMESCRITURAS);
 
-    // Lanzar procesos
+    // bucle para lanzar procesos hijos
     for (int proceso = 1; proceso <= NUMPROCESOS; proceso++) {
         pid_t pid = fork();
         
-        if (pid == 0) { // Código del HIJO
-            // Montar el dispositivo virtual (hijo)
+        if (pid == 0) { // si el pid es 0 es que somos el hijo
+            // el hijo vuelve a montar el dispositivo virtual 
             bmount(argv[1]);
 
             // Crear el directorio del proceso hijo añadiendo el PID al nombre
             char camino_proceso[200];
             sprintf(camino_proceso, "%sproceso_%d/", camino_simul, getpid());
-            mi_creat(camino_proceso, 6);
+            mi_creat(camino_proceso, 6); 
 
             // Crear el fichero prueba.dat
             char camino_fichero[300];
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
             // Inicializar la semilla de números aleatorios
             srand(time(NULL) + getpid());
 
-            // Realizar las escrituras
+            // Bucle de escritura del hijo 
             for (int nescritura = 1; nescritura <= NUMESCRITURAS; nescritura++) {
                 struct REGISTRO registro;
                 registro.fecha = time(NULL);
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
                 registro.nEscritura = nescritura;
                 registro.nRegistro = rand() % REGMAX; // [0, 499.999]
 
-                // Escribir el registro
+                // Escribir el registro en el fichero en una posicion aleatoria
                 mi_write(camino_fichero, &registro, registro.nRegistro * sizeof(struct REGISTRO), sizeof(struct REGISTRO));
 
                 #if DEBUG_simulacion
