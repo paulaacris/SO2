@@ -10,7 +10,7 @@
 
 int main(int argc, char const *argv[]) {
     if (argc != 4) {
-        fprintf(stderr, "Sintaxis: %s <disco> <ruta/antiguo> <nuevo>\n", argv[0]);
+        fprintf(stderr, "Sintaxis: ./mi_rn <disco> <ruta/antiguo> <nuevo>\n");
         return FALLO;
     }
 

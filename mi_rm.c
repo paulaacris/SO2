@@ -1,5 +1,5 @@
 /**
- * @file directorios.c
+ * @file mi_rm.c
  * @author Paula Cristina Morro Negre 
  * @author Maria Teresa Sbert Gomila
  * 
@@ -10,7 +10,7 @@
 
 int main(int argc, char **argv) {
     if (argc != 3) {
-        fprintf(stderr, "Sintaxis: %s <disco> <ruta_fichero>\n", argv[0]);
+        fprintf(stderr, "Sintaxis: ./mi_rm <disco> <ruta_fichero>\n");
         return -1;
     }
 

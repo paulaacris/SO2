@@ -2,6 +2,8 @@
  * @file truncar.c
  * @author Paula Cristina Morro Negre 
  * @author Maria Teresa Sbert Gomila
+ * 
+ * Trunca un inodo a partir de nbytes 
 */
 
 #include "directorios.h"
@@ -9,7 +11,7 @@
 int main(int argc, char const *argv[]) {
     // Validamos el número de argumentos introducidos
     if (argc != 4) {
-        fprintf(stderr, RED "Sintaxis: truncar <nombre_dispositivo> <ninodo> <nbytes>\n" RESET);
+        fprintf(stderr, RED "Sintaxis: ./truncar <nombre_dispositivo> <ninodo> <nbytes>\n" RESET);
         return FALLO;
     }
     

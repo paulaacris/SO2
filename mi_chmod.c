@@ -3,7 +3,7 @@
  * @author Paula Cristina Morro Negre
  * @author Maria Teresa Sbert Gomila
  *
- * Cambia los permisos de un fichero o directorio.
+ * Cambia los permisos de un fichero o directorio
 */
 
 #include "directorios.h"

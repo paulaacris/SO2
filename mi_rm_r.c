@@ -10,7 +10,7 @@
 
 int main(int argc, char **argv) {
     if (argc != 3) {
-        fprintf(stderr, "Sintaxis: %s <disco> <ruta_directorio>\n", argv[0]);
+        fprintf(stderr, RED "Sintaxis: mi_rm_r <disco> <ruta_directorio>\n" RESET);
         return FALLO;
     }
 

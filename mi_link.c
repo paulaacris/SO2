@@ -10,7 +10,7 @@
 
 int main(int argc, char *argv[]) {
     if (argc != 4) {
-        fprintf(stderr, RED "Sintaxis: %s <disco> </ruta_original> </ruta_enlace>\n" RESET, argv[0]);
+        fprintf(stderr, RED "Sintaxis: ./mi_link <disco> </ruta_original> </ruta_enlace>\n" RESET);
         return FALLO;
     }
 

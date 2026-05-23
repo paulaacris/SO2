@@ -1,9 +1,17 @@
+/**
+ * @file verificacion.c
+ * @author Paula Cristina Morro Negre
+ * @author Maria Teresa Sbert Gomila
+ *
+ * Recocrre los ficheros prueba.dat creados en simulacion.c y genera un informe 
+*/
+
 #include "verificacion.h"
 
 int main(int argc, char **argv) {
     // Comprobar la sintaxis
     if (argc != 3) {
-        fprintf(stderr, RED "Sintaxis: <nombre_dispositivo> <directorio_simulacion>\n" RESET);
+        fprintf(stderr, RED "Sintaxis: ./verificacion <nombre_dispositivo> <directorio_simulacion>\n" RESET);
         return FALLO;
     }
 

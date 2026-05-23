@@ -222,7 +222,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
  *  @param ninodo inodo al que corresponde el fichero/directorio
  *  @param ninodo inodo al que corresponde el fichero/directorio
  *  @param p_stat puntero al stat donde guardaremos la metainformacion
- *  @return metainformacion de un fichero
+ *  @return EXITO si todo ha ido bien, FALLO si ha habido algun error
  */
 int mi_stat_f(unsigned int ninodo, struct STAT *p_stat) {
     inodo_t inodo;
@@ -250,7 +250,7 @@ int mi_stat_f(unsigned int ninodo, struct STAT *p_stat) {
  *  Cambia los permisos de un fichero/directorio 
  *  @param ninodo inodo al que corresponde el fichero/directorio
  *  @param permisos permiso por el que queremos sustituir el anterior
- *  @return cantidad de bytes leidos realmente
+ *  @return EXITO si todo ha ido bien o FALLO si ha habido algun error 
  */
 int mi_chmod_f(unsigned int ninodo, unsigned char permisos){
     mi_waitSem();
