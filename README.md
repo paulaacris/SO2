@@ -19,15 +19,15 @@ Implementación de un sistema de ficheros basado en una estructura de inodos, de
 - **truncar:** ``./truncar <nombre_dispositivo> <ninodo> <nbytes>``
 - **permitir:** ``./permitir <nombre_dispositivo> <ninodo> <permisos>``
 - **truncar:** ``./truncar <nombre_dispositivo> <ninodo> <nbytes>``
-- **mi_cat:** Muestra todo el contenido de un fichero ``./mi_cat <nombre_dispositivo> </ruta_fichero>``
-- **mi_chmod:** Cambia los permisos de un fichero o directorio ``./mi_chmod <nombre_dispositivo> <permisos> </ruta>``
-- **mi_escribir:** Escribe texto en un fichero desde el offset indicado ``./mi_escribir <nombre_dispositivo> </ruta_fichero> <texto> <offset>``
-- **mi_link:** Crea un enlace a un fichero ``./mi_link <disco> </ruta_original> </ruta_enlace>``
-- **mi_ls:** Lista el contenido de un directorio o muestra los datos de un fichero ``./mi_ls <nombre_dispositivo> </ruta>`` ``./mi_ls -l <nombre_dispositivo> </ruta>``
-- **mi_mkdir:** Crea un directorio ``./mi_mkdir <disco> <permisos> </ruta>``
-- **mi_rm_r:** Borrado recursivo ``mi_rm_r <disco> <ruta_directorio>``
-- **mi_rm:** Borra un fichero ``./mi_rm <disco> <ruta_fichero>``
-- **mi_rmdir:** Borra un directorio vacio ``./mi_rmdir <disco> <ruta_directorio>``
+- **mi_cat:** ``./mi_cat <nombre_dispositivo> </ruta_fichero>`` Muestra todo el contenido de un fichero 
+- **mi_chmod:** ``./mi_chmod <nombre_dispositivo> <permisos> </ruta>`` Cambia los permisos de un fichero o directorio 
+- **mi_escribir:** ``./mi_escribir <nombre_dispositivo> </ruta_fichero> <texto> <offset>`` Escribe texto en un fichero desde el offset indicado 
+- **mi_link:** ``./mi_link <disco> </ruta_original> </ruta_enlace>`` Crea un enlace a un fichero
+- **mi_ls:** ``./mi_ls <nombre_dispositivo> </ruta>`` ``./mi_ls -l <nombre_dispositivo> </ruta>`` Lista el contenido de un directorio o muestra los datos de un fichero 
+- **mi_mkdir:** ``./mi_mkdir <disco> <permisos> </ruta>`` Crea un directorio 
+- **mi_rm_r:** ``mi_rm_r <disco> <ruta_directorio>`` Borrado recursivo 
+- **mi_rm:** ``./mi_rm <disco> <ruta_fichero>`` Borra un fichero 
+- **mi_rmdir:** ``./mi_rmdir <disco> <ruta_directorio>`` Borra un directorio vacio 
 
 ## RESTRICCIONES DEL PROGRAMA:
 - El nombre de fichero/directorio está limitado a 60 caracteres (TAMNOMBRE).
