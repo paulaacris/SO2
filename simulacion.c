@@ -1,3 +1,11 @@
+/**
+ * @file simulacion.c
+ * @author Paula Cristina Morro Negre
+ * @author Maria Teresa Sbert Gomila
+ *
+ * Crea N procesos y cada uno realiza X escrituras 
+*/
+
 #include "simulacion.h"
 
 int acabados = 0; // para llevar la cuenta de procesos terminados

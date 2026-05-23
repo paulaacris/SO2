@@ -271,13 +271,13 @@ int reservar_bloque() {
     // leer el SB
     if (bread(posSB, &SB) == FALLO) return FALLO;
 
-    // 1. comprobamos que hay bloques libres
+    // comprobamos que hay bloques libres
     if (SB.cantBloquesLibres == 0) {
         // si no quedan bloques libres
         return FALLO;
     }
 
-    // 2. encontrar el primer bloque logico de datos libre
+    // encontrar el primer bloque logico de datos libre
     // iteramos sobre los bloques de MB buscando el primero que no este todo a 1 (255)
 
     // llenamos el bufferAux todo de 1
@@ -296,7 +296,7 @@ int reservar_bloque() {
     }
     // al salir del bucle tenemos en bufferMB el primer bloque libre
 
-    // 3. encontramos el primer byte del bloque anterior que no este todo a 1 (!= 255)
+    // encontramos el primer byte del bloque anterior que no este todo a 1 (!= 255)
     // iteramos el bloque byte a byte hasta encontrar uno no todo a 1s
 
     int posbyte;
@@ -307,7 +307,7 @@ int reservar_bloque() {
         }
     }
 
-    // 4. encontramos el primer bit a 0 dentro de ese byte
+    // encontramos el primer bit a 0 dentro de ese byte
     unsigned char mascara = 128; // 10000000
     int posbit = 0;
 
@@ -316,10 +316,10 @@ int reservar_bloque() {
         posbit++;
     }
 
-    // 4. a que bloque fisico corresponde ese bit
+    // a que bloque fisico corresponde ese bit
     int nbloque = (nbloqueMB * BLOCKSIZE + posbyte) * 8 + posbit;
 
-    // 5. escribimos el bit a 1
+    // escribimos el bit a 1
     if (escribir_bit(nbloque, 1) == FALLO) return FALLO;
 
     // actualizmos el SB
@@ -740,7 +740,6 @@ int liberar_bloques_inodo(unsigned int primerBL, inodo_t *inodo) {
 
     // obtenemos el rango del BL
     int nRangoBL = obtener_nRangoBL(inodo, nBL, &ptr);
-    // si el rango es 0 es que el primer bloque a liberar es 0
     if (nRangoBL == 0) {
         liberados += liberar_directos(&nBL, ultimoBL, inodo, &eof); 
     }

@@ -3,7 +3,7 @@
  * @author Paula Cristina Morro Negre
  * @author Maria Teresa Sbert Gomila
  *
- * Escribe texto en un fichero desde el offset indicado.
+ * Escribe texto en un fichero desde el offset indicado
 */
 
 #include "directorios.h"

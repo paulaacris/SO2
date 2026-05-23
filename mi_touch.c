@@ -3,9 +3,8 @@
  * @author Paula Cristina Morro Negre
  * @author Maria Teresa Sbert Gomila
  *
- * Sintaxis: ./mi_touch <disco> <permisos> </ruta_fichero>
- * Crea un fichero. La ruta NO debe acabar en '/' (es un fichero).
- */
+ * Crea un fichero
+*/
 
 #include "directorios.h"
 

@@ -3,7 +3,7 @@
  * @author Paula Cristina Morro Negre
  * @author Maria Teresa Sbert Gomila
  * 
- * Muestra todo el contenido de un fichero.
+ * Muestra todo el contenido de un fichero
 */
 
 #include "directorios.h"

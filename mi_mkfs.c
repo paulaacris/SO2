@@ -2,15 +2,15 @@
  * @file mi_mkfs.c
  * @author Paula Cristina Morro Negre 
  * @author Maria Teresa Sbert Gomila
+ * 
+ * Para inicializar el disco
 */
 
 #include "directorios.h"
 
-// ./mi_mkfs <nombre_dispositivo> <nbloques>
-
 int main(int argc, char **argv) {
     if (argc != 3) {
-        fprintf(stderr, RED"Error de sintaxis. \nUso: ./mi_mkfs <nombre_dispositivo> <nbloques>\n"RESET); 
+        fprintf(stderr, RED"Sintaxis: ./mi_mkfs <nombre_dispositivo> <nbloques>\n"RESET); 
         return FALLO;
     }
  

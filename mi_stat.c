@@ -3,9 +3,8 @@
  * @author Paula Cristina Morro Negre
  * @author Maria Teresa Sbert Gomila
  *
- * Sintaxis: ./mi_stat <disco> </ruta>
- * Muestra los metadatos del inodo de un fichero o directorio.
- */
+ * Muestra los metadatos del inodo de un fichero o directorio
+*/
 
 #include "directorios.h"
 

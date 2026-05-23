@@ -90,7 +90,7 @@ int extraer_camino(const char *camino, char *inicial, char *final, char *tipo) {
  *  @param p_entrada numero de entrada dentro del inodo directorio que lo contiene
  *  @param reservar si esta a 1 y la entrada no existe se crea
  *  @param permisos permisos de la entrada
- *  @return 
+ *  @return EXITO si todo ha ido bien, o numero negativo que representa un tipo de error
  */
 int buscar_entrada(const char *camino_parcial, unsigned int *p_inodo_dir, unsigned int *p_inodo, unsigned int *p_entrada, char reservar, unsigned char permisos) {
     struct entrada entrada;
@@ -255,7 +255,7 @@ void mostrar_error_buscar_entrada(int error) {
  *  Función que crea un fichero/directorio y su entrada de directorio
  *  @param camino cambino del fichero/directorio
  *  @param permisos permisos que tendrá el fichero/directorio
- *  @return 
+ *  @return EXITO si todo ha ido bien, o numero negativo que representa un tipo de error
  */
 int mi_creat(const char *camino, unsigned char permisos) {    
     mi_waitSem();
@@ -334,8 +334,7 @@ int mi_dir(const char *camino, char *buffer, char tipo, char flag) {
             // s es un fichero leemos solo el bloque donde esta la entrada del fichero
             memset(buffer_entradas, 0, BLOCKSIZE);
             int num_bloque = num_entrada_inodo * sizeof(struct entrada) / BLOCKSIZE;
-            if (mi_read_f(p_inodo_dir, buffer_entradas, num_bloque * BLOCKSIZE, BLOCKSIZE) < 0)
-                return FALLO;
+            if (mi_read_f(p_inodo_dir, buffer_entradas, num_bloque * BLOCKSIZE, BLOCKSIZE) < 0) return FALLO;
             entrada = buffer_entradas[num_entrada_inodo % (BLOCKSIZE / sizeof(struct entrada))];  // leer siguiente entrada
         }
 
@@ -384,7 +383,7 @@ int mi_dir(const char *camino, char *buffer, char tipo, char flag) {
  *  Función que cambia los permisos de un fichero/directorio
  *  @param camino cambino del fichero/directorio
  *  @param permisos permisos que tendrá el fichero/directorio
- *  @return 
+ *  @return EXITO si todo ha ido bien, o numero negativo que representa un tipo de error
  */
 int mi_chmod(const char *camino, unsigned char permisos) {
     unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
@@ -403,7 +402,7 @@ int mi_chmod(const char *camino, unsigned char permisos) {
  *  Función para mostrar la información de un inodo de un fichero/directorio
  *  @param camino cambino del fichero/directorio
  *  @param permisos permisos que tendrá el fichero/directorio
- *  @return 
+ *  @return EXITO si todo ha ido bien, o numero negativo que representa un tipo de error
  */
 int mi_stat(const char *camino, struct STAT *p_stat) {
     unsigned int p_inodo_dir = 0, p_inodo = 0, p_entrada = 0;
@@ -621,9 +620,9 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
 
 /*  
  *  Crea el enlace de una entrada de directorio camino2 al inodo especificado por otra entrada de directorio camino1
- *  @param camino1
- *  @param camino2
- *  @return 
+ *  @param camino1 ruta del archivo original que ya existe 
+ *  @param camino2 ruta del nuevo archivo (enlace) que vamos a crear
+ *  @return EXITO si todo ha ido bien, o numero negativo que representa un tipo de error
  */
 int mi_link(const char *camino1, const char *camino2) {
     mi_waitSem();
@@ -702,8 +701,8 @@ int mi_link(const char *camino1, const char *camino2) {
 
 /*  
  *  Borra la entrada de directorio especificada y, si es el último enlace, borra el fichero/directorio
- *  @param camino
- *  @return 
+ *  @param camino enlace que queremos eliminar 
+ *  @return EXITO si todo ha ido bien, o numero negativo que representa un tipo de error
  */
 int mi_unlink(const char *camino) {    
     mi_waitSem();
@@ -738,14 +737,14 @@ int mi_unlink(const char *camino) {
         return FALLO;
     }
 
-    // obtenemos el nº de entradas que tiene
+    // obtenemos el num de entradas que tiene
     int num_entradas = inodo_dir.tamEnBytesLog / sizeof(struct entrada);
 
     struct entrada buffer_entradas[BLOCKSIZE / sizeof(struct entrada)];
 
     // si la entrada a eliminar no es la ultima 
     if (p_entrada != (num_entradas - 1)) {
-        // Leer la última y escribirla en la posición (bloque) de la entrada que queremos eliminar
+        // Leer la última y escribirla en la posición de la entrada que queremos eliminar
         int pos_ult_entrada = ((num_entradas - 1) * sizeof(struct entrada)) / BLOCKSIZE;
         memset(buffer_entradas, 0, BLOCKSIZE);
         
@@ -796,8 +795,8 @@ int mi_unlink(const char *camino) {
 /*  
  *  Renombra un fichero o directorio
  *  @param camino_antiguo ruta del fichero / directorio que queremso renombrar
- *  @param camino_nuevo nombre nuevo que le queremos poner
- *  @return 
+ *  @param nuevo nombre nuevo que le queremos poner
+ *  @return EXITO si todo ha ido bien, o numero negativo que representa un tipo de error
  */
 int mi_rn(const char *camino_antiguo, const char *nuevo) {
     mi_waitSem();
@@ -859,7 +858,7 @@ int mi_rn(const char *camino_antiguo, const char *nuevo) {
 /*  
  *  Borra recursivamente el contenido de un directorio y el propio directorio
  *  @param ruta ruta del directorio que queremso vaciar y borrar
- *  @return 
+ *  @return EXITO si todo ha ido bien, o numero negativo que representa un tipo de error
  */
 int mi_rm_r(const char *ruta) {
     mi_waitSem();
