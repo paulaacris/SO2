@@ -218,8 +218,7 @@ int mi_read_f(unsigned int ninodo, void *buf_original, unsigned int offset, unsi
 
 
 /*
- *  
- *  @param ninodo inodo al que corresponde el fichero/directorio
+ *  Metadatos del inodo
  *  @param ninodo inodo al que corresponde el fichero/directorio
  *  @param p_stat puntero al stat donde guardaremos la metainformacion
  *  @return EXITO si todo ha ido bien, FALLO si ha habido algun error
