@@ -24,8 +24,9 @@ Implementación de un sistema de ficheros basado en una estructura de inodos, de
 - **mi_escribir:** ``./mi_escribir <nombre_dispositivo> </ruta_fichero> <texto> <offset>`` Escribe texto en un fichero desde el offset indicado 
 - **mi_link:** ``./mi_link <disco> </ruta_original> </ruta_enlace>`` Crea un enlace a un fichero
 - **mi_ls:** ``./mi_ls <nombre_dispositivo> </ruta>`` ``./mi_ls -l <nombre_dispositivo> </ruta>`` Lista el contenido de un directorio o muestra los datos de un fichero 
-- **mi_mkdir:** ``./mi_mkdir <disco> <permisos> </ruta>`` Crea un directorio 
-- **mi_rm_r:** ``mi_rm_r <disco> <ruta_directorio>`` Borrado recursivo 
+- **mi_mkdir:** ``./mi_mkdir <disco> <permisos> </ruta>`` Crea un directorio
+- **mi_touch:** ``./mi_touch <nombre_dispositivo> <permisos> </ruta_fichero>`` Crea un fichero 
+- **mi_rm_r:** ``mi_rm_r <disco> <ruta_directorio>`` Borrado recursivo de directorio
 - **mi_rm:** ``./mi_rm <disco> <ruta_fichero>`` Borra un fichero 
 - **mi_rmdir:** ``./mi_rmdir <disco> <ruta_directorio>`` Borra un directorio vacio 
 
