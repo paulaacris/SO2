@@ -339,8 +339,7 @@ int mi_dir(const char *camino, char *buffer, char tipo, char flag) {
         }
 
         // leemos el inodo de la entrada actual 
-        if (leer_inodo(entrada.ninodo, &inodo) == FALLO)
-            return FALLO;
+        if (leer_inodo(entrada.ninodo, &inodo) == FALLO) return FALLO;
 
         // si es 'l' mostramos la info detallada 
         if (flag == 'l') {
@@ -432,7 +431,7 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
     // ---------- USARCACHE == 1: una sola entrada para escritura ----------
     #if USARCACHE == 1
         if (strcmp(UltimaEntradaEscritura.camino, camino) == 0) { // si la ruta que buscamso es igual a la unica que tenemos guardada
-            p_inodo   = UltimaEntradaEscritura.p_inodo; // copiamos el numero de inodo
+            p_inodo = UltimaEntradaEscritura.p_inodo; // copiamos el numero de inodo
             cache_hit = 1; // marcamos como que lo hemos encontrado
             #if DEBUG_mi_write
                 fprintf(stderr, CYAN "[mi_write() -> Utilizamos la caché de escritura en vez de llamar a buscar_entrada()]\n" RESET);
@@ -444,7 +443,7 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
         // revisamos las tres posiciones de la cache
         for (int i = 0; i < CACHE_SIZE; i++) {
             if (strcmp(UltimasEntradasEscritura[i].camino, camino) == 0) { // si las rutas son iguales
-                p_inodo   = UltimasEntradasEscritura[i].p_inodo; // copiamos el numero de inodo
+                p_inodo = UltimasEntradasEscritura[i].p_inodo; // copiamos el numero de inodo
                 cache_hit = 1; // marcamos que lo hemos encontrado
                 #if DEBUG_mi_write
                     fprintf(stderr, CYAN "[mi_write() -> Utilizamos cache[%d]: %s]\n" RESET, i, camino);
@@ -457,7 +456,7 @@ int mi_write(const char *camino, const void *buf, unsigned int offset, unsigned 
     #elif USARCACHE == 3
         for (int i = 0; i < CACHE_SIZE; i++) {
             if (strcmp(UltimasEntradasEscritura[i].camino, camino) == 0) {
-                p_inodo   = UltimasEntradasEscritura[i].p_inodo;
+                p_inodo = UltimasEntradasEscritura[i].p_inodo;
                 cache_hit = 1;
                 // Actualizamos el sello de tiempo del hit a la hora actual
                 gettimeofday(&UltimasEntradasEscritura[i].ultima_consulta, NULL);
@@ -537,7 +536,7 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
     // ---------- USARCACHE == 1 ----------
     #if USARCACHE == 1
         if (strcmp(UltimaEntradaLectura.camino, camino) == 0) {
-            p_inodo   = UltimaEntradaLectura.p_inodo;
+            p_inodo = UltimaEntradaLectura.p_inodo;
             cache_hit = 1;
             #if DEBUG_mi_read
                 fprintf(stderr, CYAN "\n[mi_read() -> Utilizamos la caché de lectura en vez de llamar a buscar_entrada()]\n" RESET);
@@ -548,7 +547,7 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
     #elif USARCACHE == 2
         for (int i = 0; i < CACHE_SIZE; i++) {
             if (strcmp(UltimasEntradasLectura[i].camino, camino) == 0) {
-                p_inodo   = UltimasEntradasLectura[i].p_inodo;
+                p_inodo = UltimasEntradasLectura[i].p_inodo;
                 cache_hit = 1;
                 #if DEBUG_mi_read
                     fprintf(stderr, CYAN "[mi_read() -> Utilizamos cache[%d]: %s]\n" RESET, i, camino);
@@ -561,7 +560,7 @@ int mi_read(const char *camino, void *buf, unsigned int offset, unsigned int nby
     #elif USARCACHE == 3
         for (int i = 0; i < CACHE_SIZE; i++) {
             if (strcmp(UltimasEntradasLectura[i].camino, camino) == 0) {
-                p_inodo   = UltimasEntradasLectura[i].p_inodo;
+                p_inodo = UltimasEntradasLectura[i].p_inodo;
                 cache_hit = 1;
                 gettimeofday(&UltimasEntradasLectura[i].ultima_consulta, NULL);
                 #if DEBUG_mi_read
